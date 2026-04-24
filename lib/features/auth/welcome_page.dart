@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
+import 'package:hair_connect/features/auth/login_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -46,7 +47,14 @@ class WelcomePage extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LoginPage(isClient: true),
+                      ),
+                    );
+                  },
                   child: const Text('Soy Cliente'),
                 ),
               ),
@@ -54,7 +62,14 @@ class WelcomePage extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LoginPage(isClient: false),
+                      ),
+                    );
+                  },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     side: const BorderSide(color: AppColors.primary),
