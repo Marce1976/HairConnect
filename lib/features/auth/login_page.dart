@@ -43,6 +43,9 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (user != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login exitoso')),
+      );
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

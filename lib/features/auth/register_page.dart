@@ -51,6 +51,9 @@ class _RegisterPageState extends State<RegisterPage> {
         widget.isClient
         );
         if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cuenta creada exitosamente')),
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
