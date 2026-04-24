@@ -1,17 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
+import 'package:hair_connect/features/auth/auth_service.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   final bool isClient;
-
   const RegisterPage({super.key, required this.isClient});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _authService = AuthService();
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _register() async {
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Las contraseñas no coinciden')),
+      );
+      return;
+    }
+    final user = await _authService.register(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (user != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cuenta creada Correctamente')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al crear la cuenta')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Registro Cliente'),
-      ),
+      appBar: AppBar(title: const Text('Registro Cliente')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -19,6 +61,7 @@ class RegisterPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextFormField(
+                controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nombre Completo',
                   hintText: 'Introduce tu nombre completo',
@@ -30,6 +73,7 @@ class RegisterPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                controller: _emailController,
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   hintText: 'Introduce tu email',
@@ -42,6 +86,7 @@ class RegisterPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                controller: _passwordController,
                 decoration: const InputDecoration(
                   labelText: 'Contraseña',
                   hintText: '••••••••',
@@ -54,6 +99,7 @@ class RegisterPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                controller: _confirmPasswordController,
                 decoration: const InputDecoration(
                   labelText: 'Confirmar Contraseña',
                   hintText: '••••••••',
@@ -68,7 +114,7 @@ class RegisterPage extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _register,
                   child: const Text('Crear Cuenta'),
                 ),
               ),

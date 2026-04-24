@@ -1,16 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/auth/register_page.dart';
+import 'package:hair_connect/features/auth/auth_service.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   final bool isClient;
   const LoginPage({super.key, required this.isClient});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _authService = AuthService();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (_emailController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, completa todos los campos')),
+      );
+      return;
+    }
+    final user = await _authService.login(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+      // --- SOLUCIÓN AQUÍ ---
+      // Si el usuario cerró la pantalla mientras esperábamos a Firebase, 
+      // salimos de la función sin hacer nada.
+    if (!mounted) return;
+
+    if (user != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inicio de sesión exitoso')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email o contraseña incorrectos')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(isClient ? 'Acceso Cliente' : 'Acceso Negocio'),
+        title: Text(widget.isClient ? 'Acceso Cliente' : 'Acceso Negocio'),
       ),
         body: SafeArea(
           child: Padding(
@@ -19,6 +63,7 @@ class LoginPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextFormField(
+                    controller: _emailController,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     hintText: 'Introduce tu email',
@@ -31,6 +76,7 @@ class LoginPage extends StatelessWidget {
                     ),
                 const SizedBox(height: 16),
                 TextFormField(
+                  controller: _passwordController,
                   decoration: const InputDecoration(
                     labelText: 'Contraseña',
                     hintText: '••••••••',
@@ -45,7 +91,7 @@ class LoginPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _login,
                     child: const Text('Iniciar Sesión'),
                   ),
                 ),
@@ -59,7 +105,7 @@ class LoginPage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => RegisterPage(isClient: isClient),
+                            builder: (_) => RegisterPage(isClient: widget.isClient),
                           ),
                         );
                       },
