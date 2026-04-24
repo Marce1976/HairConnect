@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
+import 'package:hair_connect/features/auth/register_page.dart';
 
 class LoginPage extends StatelessWidget {
   final bool isClient;
@@ -54,7 +55,14 @@ class LoginPage extends StatelessWidget {
                   children: [
                     const Text('¿No tienes cuenta?'),
                     GestureDetector(
-                      onTap: (){},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => RegisterPage(isClient: isClient),
+                          ),
+                        );
+                      },
                       child: const Text(
                         'Regístrate',
                         style: TextStyle(
