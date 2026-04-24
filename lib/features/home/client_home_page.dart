@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
+import 'package:hair_connect/features/auth/auth_service.dart';
+import 'package:hair_connect/features/auth/welcome_page.dart';
 
 class ClientHomePage extends StatelessWidget {
   const ClientHomePage({super.key});
@@ -9,11 +11,25 @@ class ClientHomePage extends StatelessWidget {
       return Scaffold(
       appBar: AppBar(
         title: const Text('Bienvenido, Cliente'),
-        automaticallyImplyLeading: false, // Evita mostrar el botón de retroceso
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await AuthService().logout();
+              if (!context.mounted) return;
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const WelcomePage()),
+                (route) => false, // Elimina todas las rutas anteriores
+              );
+            },
+          ),   
+        ], // Evita mostrar el botón de retroceso
       ),
       body: const Center(
         child: Text(
-          'Bienvenido a HairConnect, tu plataforma de gestión integral para peluquerías. Aquí podrás explorar los servicios disponibles, reservar citas y mantenerte al día con las últimas promociones de tu salón favorito.',
+          'Bienvenido a HairConnect',
           style: TextStyle(
             color: AppColors.primary,
             fontSize: 24,
