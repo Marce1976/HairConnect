@@ -69,7 +69,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Registro Cliente')),
+      appBar: AppBar(title: Text(widget.isClient ? 'Registro Cliente' : 'Registro Negocio')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
