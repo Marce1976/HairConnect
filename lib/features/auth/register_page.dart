@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/auth/auth_service.dart';
+import 'package:hair_connect/features/auth/user_service.dart';
+import 'package:hair_connect/features/home/business_home_page.dart';
+import 'package:hair_connect/features/home/client_home_page.dart';
 
 class RegisterPage extends StatefulWidget {
   final bool isClient;
@@ -16,6 +19,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _authService = AuthService();
+  final _userService = UserService();
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -40,15 +45,26 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!mounted) return;
 
     if (user != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cuenta creada Correctamente')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al crear la cuenta')),
-      );
+      await _userService.saveUser(
+        user,
+        _nameController.text.trim(),
+        widget.isClient
+        );
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => widget.isClient
+                ? const ClientHomePage()
+                : const BusinessHomePage(),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al crear la cuenta')),
+        );
+      }
     }
-  }
 
   @override
   Widget build(BuildContext context) {
