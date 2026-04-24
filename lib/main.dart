@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hair_connect/core/theme/app_colors.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
       title: 'HairConnect',
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        backgroundColor: const Color(0xFF2a5173),
+        backgroundColor: AppColors.primary,
         body: const Center(
           child: Text(
             'Welcome to HairConnect',
