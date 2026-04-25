@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/auth/auth_service.dart';
 import 'package:hair_connect/features/auth/welcome_page.dart';
+import 'package:hair_connect/features/booking/booking_page.dart';
 
 class ClientHomePage extends StatelessWidget {
   const ClientHomePage({super.key});
@@ -10,7 +11,7 @@ class ClientHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
       return Scaffold(
       appBar: AppBar(
-        title: const Text('Bienvenido, Cliente'),
+        title: const Text('Area del Cliente'),
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
@@ -27,15 +28,36 @@ class ClientHomePage extends StatelessWidget {
           ),   
         ], // Evita mostrar el botón de retroceso
       ),
-      body: const Center(
-        child: Text(
-          'Bienvenido a HairConnect',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 24,
-          ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+            const Text(
+              'Bienvenido a HairConnect',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 24,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BookingPage()),
+                  );
+                },
+              child: const Text('Reservar Cita'),
+              ),
+            ),
+          ],
         ),
       ),
+    ),
     );
   }
 }

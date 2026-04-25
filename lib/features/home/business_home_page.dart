@@ -10,7 +10,7 @@ class BusinessHomePage extends StatelessWidget {
   Widget build (BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Panel de Gestión para Negocios'),
+        title: const Text('Area de Negocio'),
         automaticallyImplyLeading: false, 
         actions: [
           IconButton(
@@ -29,7 +29,7 @@ class BusinessHomePage extends StatelessWidget {
       ),
       body: const Center(
         child: Text(
-          'Bienvenido, Negocio',
+          'Bienvenido a HairConnect',
           style: TextStyle(
             color: AppColors.primary,
             fontSize: 24,
