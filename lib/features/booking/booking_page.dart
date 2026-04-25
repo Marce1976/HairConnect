@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
+import 'package:hair_connect/features/booking/booking_service.dart';
 
 class BookingPage extends StatefulWidget {
   const BookingPage({super.key});
@@ -9,7 +10,6 @@ class BookingPage extends StatefulWidget {
 }
 
 class _BookingPageState extends State<BookingPage> {
-
   int _currentStep = 0;
   String? _selectedService;
   String? _selectedDate;
@@ -32,19 +32,53 @@ class _BookingPageState extends State<BookingPage> {
     'Ana Martínez',
   ];
 
+  final _bookingService = BookingService();
+
+  Future<void> _confirmBooking() async {
+    if (_selectedService == null ||
+        _selectedDate == null ||
+        _selectedTime == null ||
+        _selectedStylist == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Por favor, completa todos los pasos para confirmar tu reserva.',
+          ),
+        ),
+      );
+      return;
+    }
+    final success = await _bookingService.saveBooking(
+      service: _selectedService!,
+      date: _selectedDate!,
+      time: _selectedTime!,
+      stylist: _selectedStylist!,
+    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reserva confirmada exitosamente.')),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error al confirmar la reserva. Inténtalo de nuevo.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reserva tu cita'),
-      ),
+      appBar: AppBar(title: const Text('Reserva tu cita')),
       body: Stepper(
         currentStep: _currentStep,
         onStepContinue: () {
           if (_currentStep < 3) {
-            setState(() {
-              _currentStep++;
-            });
+            setState(() => _currentStep++);
+          } else {
+            _confirmBooking();
           }
         },
         onStepCancel: () {
@@ -60,21 +94,21 @@ class _BookingPageState extends State<BookingPage> {
             isActive: _currentStep >= 0,
             content: Column(
               children: _services.map((service) {
-            return RadioListTile<String>(
-              title: Text(service),
-              value: service,
-              groupValue: _selectedService,
-              activeColor: AppColors.primary,
-              onChanged: (String? value) {
-                setState(() {
-                  _selectedService = value;
-                });
-              },
-            );
-          }).toList(),
-        ),
-      ),
-        Step(
+                return RadioListTile<String>(
+                  title: Text(service),
+                  value: service,
+                  groupValue: _selectedService,
+                  activeColor: AppColors.primary,
+                  onChanged: (String? value) {
+                    setState(() {
+                      _selectedService = value;
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          Step(
             title: const Text('Estilista'),
             isActive: _currentStep >= 1,
             content: Column(
@@ -111,7 +145,8 @@ class _BookingPageState extends State<BookingPage> {
                 );
                 if (pickedDate != null && mounted) {
                   setState(() {
-                    _selectedDate = '${pickedDate.day}/${pickedDate.month}/${pickedDate.year}';
+                    _selectedDate =
+                        '${pickedDate.day}/${pickedDate.month}/${pickedDate.year}';
                   });
                 }
               },
@@ -142,7 +177,3 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 }
-
-
-          
-
