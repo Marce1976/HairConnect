@@ -3,6 +3,7 @@ import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/auth/auth_service.dart';
 import 'package:hair_connect/features/auth/welcome_page.dart';
 import 'package:hair_connect/features/business/agenda_page.dart';
+import 'package:hair_connect/features/business/stylists_page.dart';
 
 class BusinessHomePage extends StatefulWidget {
   const BusinessHomePage({super.key});
@@ -16,7 +17,7 @@ class _BusinessHomePageState extends State<BusinessHomePage> {
 
   final List<Widget> _pages = [
     const AgendaPage(),
-    const Center(child: Text('Estilistas')),
+    const StylistsPage(),
     const Center(child: Text('Servicios')),
     const Center(child: Text('Estadísticas')),
   ];
@@ -25,7 +26,7 @@ class _BusinessHomePageState extends State<BusinessHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Area de Negocio'),
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -38,7 +39,7 @@ class _BusinessHomePageState extends State<BusinessHomePage> {
                 (route) => false, // Elimina todas las rutas anteriores
               );
             },
-          ),   
+          ),
         ],
       ),
       body: _pages[_currentIndex],
