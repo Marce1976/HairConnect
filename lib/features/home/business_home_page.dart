@@ -5,6 +5,7 @@ import 'package:hair_connect/features/auth/welcome_page.dart';
 import 'package:hair_connect/features/business/agenda_page.dart';
 import 'package:hair_connect/features/business/stylists_page.dart';
 import 'package:hair_connect/features/business/services_page.dart';
+import 'package:hair_connect/features/business/stats_page.dart';
 
 class BusinessHomePage extends StatefulWidget {
   const BusinessHomePage({super.key});
@@ -20,7 +21,7 @@ class _BusinessHomePageState extends State<BusinessHomePage> {
     const AgendaPage(),
     const StylistsPage(),
     const ServicesPage(),
-    const Center(child: Text('Estadísticas')),
+    const StatsPage(),
   ];
   @override
   Widget build(BuildContext context) {
