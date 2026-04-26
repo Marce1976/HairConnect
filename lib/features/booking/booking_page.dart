@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/booking/booking_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BookingPage extends StatefulWidget {
   const BookingPage({super.key});
@@ -16,21 +17,10 @@ class _BookingPageState extends State<BookingPage> {
   String? _selectedTime;
   String? _selectedStylist;
 
-  final List<String> _services = [
-    'Corte de Pelo',
-    'Coloración',
-    'Peinado',
-    'Tratamiento Capilar',
-    'Alisado',
-    'Mechas',
-  ];
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  List<String> _services = [];
+  List<String> _stylists = [];
 
-  final List<String> _stylists = [
-    'Juan Pérez',
-    'María Gómez',
-    'Carlos Rodríguez',
-    'Ana Martínez',
-  ];
 
   final _bookingService = BookingService();
 
@@ -67,6 +57,25 @@ class _BookingPageState extends State<BookingPage> {
         ),
       );
     }
+  }
+@override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final servicesSnapshot = await _db.collection('services').get();
+    final stylistsSnapshot = await _db.collection('stylists').get();
+
+    setState(() {
+      _services = servicesSnapshot.docs
+          .map((doc) => (doc['name'] as String))
+          .toList();
+      _stylists = stylistsSnapshot.docs
+          .map((doc) => (doc['name'] as String))
+          .toList();
+    });
   }
 
   @override
