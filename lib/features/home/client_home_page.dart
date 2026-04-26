@@ -3,6 +3,7 @@ import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/auth/auth_service.dart';
 import 'package:hair_connect/features/auth/welcome_page.dart';
 import 'package:hair_connect/features/booking/booking_page.dart';
+import 'package:hair_connect/features/booking/booking_history_page.dart';
 
 class ClientHomePage extends StatelessWidget {
   const ClientHomePage({super.key});
@@ -54,10 +55,31 @@ class ClientHomePage extends StatelessWidget {
               child: const Text('Reservar Cita'),
               ),
             ),
-          ],
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const BookingHistoryPage()),
+                  );
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+                child: const Text('Ver Historial de Reservas'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
