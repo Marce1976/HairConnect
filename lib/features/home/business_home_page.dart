@@ -2,12 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/auth/auth_service.dart';
 import 'package:hair_connect/features/auth/welcome_page.dart';
+import 'package:hair_connect/features/business/agenda_page.dart';
 
-class BusinessHomePage extends StatelessWidget {
+class BusinessHomePage extends StatefulWidget {
   const BusinessHomePage({super.key});
 
   @override
-  Widget build (BuildContext context) {
+  State<BusinessHomePage> createState() => _BusinessHomePageState();
+}
+
+class _BusinessHomePageState extends State<BusinessHomePage> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    const AgendaPage(),
+    const Center(child: Text('Estilistas')),
+    const Center(child: Text('Servicios')),
+    const Center(child: Text('Estadísticas')),
+  ];
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Area de Negocio'),
@@ -27,14 +41,31 @@ class BusinessHomePage extends StatelessWidget {
           ),   
         ],
       ),
-      body: const Center(
-        child: Text(
-          'Bienvenido a HairConnect',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 24,
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textGrey,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Agenda',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Estilistas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.content_cut),
+            label: 'Servicios',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'Estadísticas',
+          ),
+        ],
       ),
     );
   }
