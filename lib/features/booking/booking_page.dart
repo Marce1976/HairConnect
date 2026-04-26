@@ -54,6 +54,7 @@ class _BookingPageState extends State<BookingPage> {
       time: _selectedTime!,
       stylist: _selectedStylist!,
     );
+    if (!mounted) return;
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Reserva confirmada exitosamente.')),

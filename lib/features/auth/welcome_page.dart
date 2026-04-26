@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/auth/login_page.dart';
-import 'package:hair_connect/features/auth/welcome_page.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
