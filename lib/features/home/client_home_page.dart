@@ -4,6 +4,7 @@ import 'package:hair_connect/features/auth/auth_service.dart';
 import 'package:hair_connect/features/auth/welcome_page.dart';
 import 'package:hair_connect/features/booking/booking_page.dart';
 import 'package:hair_connect/features/booking/booking_history_page.dart';
+import 'package:hair_connect/features/notifications/notifications_page.dart';
 
 class ClientHomePage extends StatelessWidget {
   const ClientHomePage({super.key});
@@ -12,9 +13,18 @@ class ClientHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
       return Scaffold(
       appBar: AppBar(
-        title: const Text('Area del Cliente'),
+        title: const Text('Area Cliente'),
         automaticallyImplyLeading: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsPage()),
+              );
+          },
+        ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {

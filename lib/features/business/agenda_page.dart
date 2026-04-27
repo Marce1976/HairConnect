@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hair_connect/features/notifications/notification_service.dart';
 
 class AgendaPage extends StatefulWidget {
   const AgendaPage({super.key});
@@ -11,8 +12,9 @@ class AgendaPage extends StatefulWidget {
 
 class _AgendaPageState extends State<AgendaPage> {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final NotificationService _notificationService = NotificationService();
 
-  void _showStatusUpdateDialog(String bookingId, String currentStatus) {
+  void _showStatusUpdateDialog(String bookingId, String currentStatus, Map<String, dynamic> booking) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -27,6 +29,11 @@ class _AgendaPageState extends State<AgendaPage> {
                 await _db.collection('bookings').doc(bookingId).update({
                   'status': 'confirmed',
                 });
+                await _notificationService.sendNotification(
+                  userId: booking['userId'] ?? '',
+                  title: 'Reserva confirmada',
+                  message: 'Tu reserva ha sido confirmada.',
+                );
                 if (mounted) Navigator.pop(context);
               },
             ),
@@ -47,6 +54,11 @@ class _AgendaPageState extends State<AgendaPage> {
                 await _db.collection('bookings').doc(bookingId).update({
                   'status': 'canceled',
                 });
+                await _notificationService.sendNotification(
+                  userId: booking['userId'] ?? '',
+                  title: 'Reserva cancelada',
+                  message: 'Tu reserva ha sido cancelada.',
+                );
                 if (mounted) Navigator.pop(context);
               },
             ),
@@ -101,6 +113,7 @@ class _AgendaPageState extends State<AgendaPage> {
               onTap: () => _showStatusUpdateDialog(
                 bookings[index].id,
                 booking['status'] ?? 'pending',
+                booking,
               ),
               child: Card(
                 margin: const EdgeInsets.only(bottom: 12.0),

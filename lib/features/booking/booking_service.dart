@@ -17,10 +17,12 @@ class BookingService {
 
       await _db.collection('bookings').add({
         'userId': user.uid,
+        'businessId': 'business_placeholder',
         'service': service,
         'date': date,
         'time': time,
         'stylist': stylist,
+        'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
       });
       return true;
