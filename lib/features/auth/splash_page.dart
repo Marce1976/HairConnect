@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hair_connect/features/auth/welcome_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -33,9 +32,8 @@ class _SplashPageState extends State<SplashPage> {
           children: [
             Transform.rotate(
               angle: 1.5708,
-              child: const FaIcon(
-                FontAwesomeIcons.scissors,
-                color: AppColors.gold,
+              child: const Icon(
+                Icons.content_cut,                color: AppColors.gold,
                 size: 72,
               ),
             ),
