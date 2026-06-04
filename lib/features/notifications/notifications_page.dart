@@ -39,7 +39,7 @@ class NotificationsPage extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
-                color: isRead ? Colors.white : AppColors.primary.withOpacity(0.05),
+                color: isRead ? Colors.white : AppColors.primary.withValues(alpha: 0.05),
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: isRead ? AppColors.primary : AppColors.primary,

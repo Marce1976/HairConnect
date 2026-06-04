@@ -83,4 +83,5 @@ class DefaultFirebaseOptions {
     authDomain: 'hairconnect-70b13.firebaseapp.com',
     storageBucket: 'hairconnect-70b13.firebasestorage.app',
   );
+
 }

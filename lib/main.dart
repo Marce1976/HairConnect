@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hair_connect/core/theme/app_colors.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hair_connect/core/theme/app_theme.dart';
-import 'package:hair_connect/features/auth/splash_page.dart';
+import 'package:hair_connect/core/routes/app_router.dart';
+import 'package:hair_connect/core/di/service_locator.dart';
+import 'package:hair_connect/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hair_connect/firebase_options.dart';
 
@@ -10,7 +12,15 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  await initDependencies();
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => sl<AuthBloc>()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -18,14 +28,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'HairConnect',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: Scaffold(
-        backgroundColor: AppColors.primary,
-        body: const SplashPage(),
-      ),
+      routerConfig: appRouter,
     );
   }
 }
