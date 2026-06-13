@@ -9,11 +9,23 @@ class UserService {
 
   Future<void> saveUser(User user, String name, bool isClient) async {
     await _db.collection('users').doc(user.uid).set({
-      'uid':user.uid,
+      'uid': user.uid,
       'name': name,
-      'email': user.email,
+      'email': user.email?.toLowerCase(),
       'isClient': isClient,
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  /// Verifica si el usuario autenticado tiene rol de administrador.
+  /// Se considera admin si su documento en `users/{uid}` tiene `isAdmin: true`.
+  Future<bool> isAdmin(String uid) async {
+    try {
+      final doc = await _db.collection('users').doc(uid).get();
+      if (!doc.exists) return false;
+      return (doc.data()?['isAdmin'] as bool?) ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 }

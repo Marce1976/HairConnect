@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -21,13 +19,12 @@ class LookBookPage extends StatefulWidget {
 class _LookBookPageState extends State<LookBookPage> {
   final LookRepository _lookRepository = sl<LookRepository>();
   final BusinessRepository _businessRepository = sl<BusinessRepository>();
-  final FavoriteService _favoriteService = sl<FavoriteService>();
+  late final Stream<QuerySnapshot> _looksStream;
+  late final Stream<QuerySnapshot> _salonsStream;
 
   String? _selectedSalonId;
   String? _selectedStylistName;
   String? _selectedCity;
-  Set<String> _favoriteIds = {};
-  StreamSubscription<QuerySnapshot>? _favoritesSubscription;
 
   /// Mapa: ciudad -> lista de salonIds
   Map<String, List<String>> _salonsByCity = {};
@@ -36,18 +33,9 @@ class _LookBookPageState extends State<LookBookPage> {
   @override
   void initState() {
     super.initState();
+    _looksStream = _lookRepository.getLooks();
+    _salonsStream = _businessRepository.getSalons();
     _loadCities();
-    _favoritesSubscription = _favoriteService.getFavoritesStream().listen(
-      (snapshot) {
-        if (!mounted) return;
-        setState(() {
-          _favoriteIds = snapshot.docs
-              .map((doc) => doc['lookId'] as String)
-              .toSet();
-        });
-      },
-      onError: (_) {},
-    );
   }
 
   Future<void> _loadCities() async {
@@ -71,14 +59,19 @@ class _LookBookPageState extends State<LookBookPage> {
 
   @override
   void dispose() {
-    _favoritesSubscription?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Look & Book')),
+      appBar: AppBar(
+        title: const Text('Look & Book'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.small(
         backgroundColor: AppColors.primary,
         onPressed: () => context.push('/seed'),
@@ -86,7 +79,7 @@ class _LookBookPageState extends State<LookBookPage> {
         child: const Icon(Icons.storage, color: Colors.white),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _lookRepository.getLooks(),
+        stream: _looksStream,
         builder: (context, snapshot) {
           final isLoading = snapshot.connectionState == ConnectionState.waiting;
           final looks = snapshot.data?.docs ?? [];
@@ -186,7 +179,7 @@ class _LookBookPageState extends State<LookBookPage> {
             children: [
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: _businessRepository.getSalons(),
+                  stream: _salonsStream,
                   builder: (context, snapshot) {
                     final salons = snapshot.data?.docs ?? [];
                     return Container(
@@ -286,7 +279,6 @@ class _LookBookPageState extends State<LookBookPage> {
   }
 
   Widget _buildLookCard(Look look) {
-    final isFavorite = _favoriteIds.contains(look.id);
     return Card(
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
@@ -329,22 +321,9 @@ class _LookBookPageState extends State<LookBookPage> {
                   Positioned(
                     top: 4,
                     right: 4,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black26,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color:
-                              isFavorite ? AppColors.gold : Colors.white,
-                        ),
-                        onPressed: () => _favoriteService
-                            .toggleFavorite(look.id, look.salonId),
-                      ),
+                    child: _LookCardFavoriteButton(
+                      lookId: look.id,
+                      salonId: look.salonId,
                     ),
                   ),
                 ],
@@ -475,6 +454,81 @@ class _CityChipLook extends StatelessWidget {
         ),
         labelPadding: const EdgeInsets.symmetric(horizontal: 8),
         visualDensity: VisualDensity.compact,
+      ),
+    );
+  }
+}
+
+/// Widget independiente para el botón de favorito en tarjetas de look.
+/// Al tener su propio estado, al marcarlo solo se reconstruye este icono,
+/// no toda la página.
+class _LookCardFavoriteButton extends StatefulWidget {
+  final String lookId;
+  final String salonId;
+
+  const _LookCardFavoriteButton({
+    required this.lookId,
+    required this.salonId,
+  });
+
+  @override
+  State<_LookCardFavoriteButton> createState() =>
+      _LookCardFavoriteButtonState();
+}
+
+class _LookCardFavoriteButtonState extends State<_LookCardFavoriteButton> {
+  final FavoriteService _favoriteService = sl<FavoriteService>();
+  bool _isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatus();
+  }
+
+  Future<void> _loadStatus() async {
+    try {
+      final isFav = await _favoriteService.isFavorite(widget.lookId);
+      if (!mounted) return;
+      setState(() => _isFavorite = isFav);
+    } catch (e) {
+      debugPrint('Error al cargar favorito: $e');
+    }
+  }
+
+  Future<void> _toggle() async {
+    try {
+      final newState = await _favoriteService.toggleFavorite(
+        widget.lookId,
+        widget.salonId,
+      );
+      if (!mounted) return;
+      setState(() => _isFavorite = newState);
+    } catch (e) {
+      debugPrint('Error al toggle favorito: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error al actualizar favorito'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: IconButton(
+        icon: Icon(
+          _isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: _isFavorite ? AppColors.gold : Colors.white,
+        ),
+        onPressed: _toggle,
       ),
     );
   }

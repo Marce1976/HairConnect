@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:video_player/video_player.dart';
 
 import 'package:hair_connect/core/di/service_locator.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
@@ -21,28 +22,47 @@ class LookDetailPage extends StatefulWidget {
 
 class _LookDetailPageState extends State<LookDetailPage> {
   final LookRepository _lookRepository = sl<LookRepository>();
-  final FavoriteService _favoriteService = sl<FavoriteService>();
   final BusinessRepository _businessRepository = sl<BusinessRepository>();
 
-  bool _isFavorite = false;
+  Look? _look;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _loadFavoriteStatus();
+    _loadLook();
   }
 
-  Future<void> _loadFavoriteStatus() async {
-    final isFav = await _favoriteService.isFavorite(widget.lookId);
-    if (!mounted) return;
-    setState(() => _isFavorite = isFav);
-  }
-
-  Future<void> _toggleFavorite(Look look) async {
-    final newState =
-        await _favoriteService.toggleFavorite(look.id, look.salonId);
-    if (!mounted) return;
-    setState(() => _isFavorite = newState);
+  Future<void> _loadLook() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final snapshot = await _lookRepository.getLookById(widget.lookId);
+      if (!mounted) return;
+      if (snapshot == null || !snapshot.exists) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Look no encontrado';
+        });
+        return;
+      }
+      setState(() {
+        _look = Look.fromMap(
+          snapshot.id,
+          snapshot.data() as Map<String, dynamic>,
+        );
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Error al cargar el look';
+      });
+    }
   }
 
   @override
@@ -53,36 +73,30 @@ class _LookDetailPageState extends State<LookDetailPage> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
-      body: FutureBuilder<DocumentSnapshot?>(
-        future: _lookRepository.getLookById(widget.lookId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return _buildErrorView(
-              message: 'Look no encontrado',
-              onRetry: () => setState(() {}),
-            );
-          }
-
-          if (snapshot.hasError) {
-            return _buildErrorView(
-              message: 'Error al cargar el look',
-              onRetry: () => setState(() {}),
-            );
-          }
-
-          final look = Look.fromMap(
-            snapshot.data!.id,
-            snapshot.data!.data() as Map<String, dynamic>,
-          );
-
-          return _buildContent(look);
-        },
-      ),
+      body: _buildBody(),
     );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return _buildErrorView(
+        message: _errorMessage!,
+        onRetry: _loadLook,
+      );
+    }
+
+    if (_look == null) {
+      return _buildErrorView(
+        message: 'Look no encontrado',
+        onRetry: _loadLook,
+      );
+    }
+
+    return _buildContent(_look!);
   }
 
   Widget _buildErrorView({
@@ -164,38 +178,141 @@ class _LookDetailPageState extends State<LookDetailPage> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.network(
-            look.imageUrl,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            errorBuilder: (_, _, _) => Container(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              child: const Icon(
-                Icons.broken_image,
-                size: 64,
-                color: AppColors.textGrey,
+          GestureDetector(
+            onTap: () => _showMediaViewer(look),
+            child: Image.network(
+              look.imageUrl,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              errorBuilder: (_, _, _) => Container(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                child: const Icon(
+                  Icons.broken_image,
+                  size: 64,
+                  color: AppColors.textGrey,
+                ),
               ),
             ),
           ),
+          if (look.hasMediaExtra)
+            Positioned(
+              bottom: 8,
+              left: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      look.videoUrl != null
+                          ? Icons.play_circle_outline
+                          : Icons.compare,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      look.videoUrl != null
+                          ? 'Toca para ver más'
+                          : 'Toca para ampliar',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Positioned(
             top: 8,
             right: 8,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black26,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: IconButton(
-                icon: Icon(
-                  _isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: _isFavorite ? AppColors.gold : Colors.white,
-                ),
-                onPressed: () => _toggleFavorite(look),
-              ),
-            ),
+            child: _FavoriteButton(lookId: look.id, salonId: look.salonId),
           ),
         ],
       ),
+    );
+  }
+
+  void _showMediaViewer(Look look) {
+    // Si hay video, mostrar reproductor de video
+    if (look.videoUrl != null) {
+      _showVideoPlayer(look.videoUrl!);
+      return;
+    }
+    // Si hay afterImageUrl, mostrar antes/después
+    if (look.afterImageUrl != null) {
+      _showBeforeAfter(look.imageUrl, look.afterImageUrl!);
+      return;
+    }
+    // Por defecto, mostrar zoom de imagen
+    _showImageZoom(look.imageUrl);
+  }
+
+  void _showImageZoom(String imageUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(8),
+        child: Stack(
+          children: [
+            InteractiveViewer(
+              minScale: 1.0,
+              maxScale: 5.0,
+              child: Center(
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => const Icon(
+                    Icons.broken_image,
+                    size: 64,
+                    color: Colors.white54,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.of(ctx).pop(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBeforeAfter(String beforeImageUrl, String afterImageUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (ctx) => _BeforeAfterDialog(
+        beforeImageUrl: beforeImageUrl,
+        afterImageUrl: afterImageUrl,
+      ),
+    );
+  }
+
+  void _showVideoPlayer(String videoUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (ctx) => _VideoPlayerDialog(videoUrl: videoUrl),
     );
   }
 
@@ -468,6 +585,309 @@ class _LookDetailPageState extends State<LookDetailPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Diálogo para comparar antes/después con toggle chips.
+class _BeforeAfterDialog extends StatefulWidget {
+  final String beforeImageUrl;
+  final String afterImageUrl;
+
+  const _BeforeAfterDialog({
+    required this.beforeImageUrl,
+    required this.afterImageUrl,
+  });
+
+  @override
+  State<_BeforeAfterDialog> createState() => _BeforeAfterDialogState();
+}
+
+class _BeforeAfterDialogState extends State<_BeforeAfterDialog> {
+  bool _showAfter = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: InteractiveViewer(
+              minScale: 1.0,
+              maxScale: 5.0,
+              child: Image.network(
+                _showAfter ? widget.afterImageUrl : widget.beforeImageUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) => const Icon(
+                  Icons.broken_image,
+                  size: 64,
+                  color: Colors.white54,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 8,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildChip('Antes', !_showAfter),
+                    const SizedBox(width: 4),
+                    _buildChip('Después', _showAfter),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(String label, bool selected) {
+    return GestureDetector(
+      onTap: () => setState(() => _showAfter = label == 'Después'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.black : Colors.white70,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget stateful para reproducir video dentro del diálogo.
+class _VideoPlayerDialog extends StatefulWidget {
+  final String videoUrl;
+
+  const _VideoPlayerDialog({required this.videoUrl});
+
+  @override
+  State<_VideoPlayerDialog> createState() => _VideoPlayerDialogState();
+}
+
+class _VideoPlayerDialogState extends State<_VideoPlayerDialog> {
+  late VideoPlayerController _controller;
+  late Future<void> _initializeFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(
+      Uri.parse(widget.videoUrl),
+    );
+    _initializeFuture = _controller.initialize();
+    _controller.setLooping(true);
+    _controller.play();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: FutureBuilder(
+        future: _initializeFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          }
+          if (snapshot.hasError) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline,
+                    size: 48, color: Colors.white54),
+                const SizedBox(height: 8),
+                const Text('Error al cargar el vídeo',
+                    style: TextStyle(color: Colors.white70)),
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    '${snapshot.error}',
+                    style: const TextStyle(color: Colors.white38, fontSize: 11),
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cerrar'),
+                ),
+              ],
+            );
+          }
+          return Stack(
+            children: [
+              Center(
+                child: AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            _controller.value.isPlaying
+                                ? Icons.pause
+                                : Icons.play_arrow,
+                            color: Colors.white,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              if (_controller.value.isPlaying) {
+                                _controller.pause();
+                              } else {
+                                _controller.play();
+                              }
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close,
+                              color: Colors.white),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Widget independiente para el botón de favorito.
+/// Al tener su propio estado, al marcarlo solo se reconstruye este icono,
+/// no toda la página.
+class _FavoriteButton extends StatefulWidget {
+  final String lookId;
+  final String salonId;
+
+  const _FavoriteButton({
+    required this.lookId,
+    required this.salonId,
+  });
+
+  @override
+  State<_FavoriteButton> createState() => _FavoriteButtonState();
+}
+
+class _FavoriteButtonState extends State<_FavoriteButton> {
+  final FavoriteService _favoriteService = sl<FavoriteService>();
+  bool _isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatus();
+  }
+
+  Future<void> _loadStatus() async {
+    try {
+      final isFav = await _favoriteService.isFavorite(widget.lookId);
+      if (!mounted) return;
+      setState(() => _isFavorite = isFav);
+    } catch (e) {
+      debugPrint('Error al cargar favorito: $e');
+    }
+  }
+
+  Future<void> _toggle() async {
+    try {
+      final newState =
+          await _favoriteService.toggleFavorite(widget.lookId, widget.salonId);
+      if (!mounted) return;
+      setState(() => _isFavorite = newState);
+    } catch (e) {
+      debugPrint('Error al toggle favorito: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error al actualizar favorito'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: IconButton(
+        icon: Icon(
+          _isFavorite ? Icons.favorite : Icons.favorite_border,
+          color: _isFavorite ? AppColors.gold : Colors.white,
+        ),
+        onPressed: _toggle,
       ),
     );
   }

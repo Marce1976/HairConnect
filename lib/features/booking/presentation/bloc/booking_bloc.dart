@@ -15,126 +15,16 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
   final BookingService _bookingService;
   final BusinessRepository _businessRepository;
 
-  // TODO: Obtener businessId del contexto real (negocio logueado)
-  static const String _defaultBusinessId = 'business_hairconnect';
-
-  BookingBloc({BookingService? bookingService, BusinessRepository? businessRepository})
-      : _bookingService = bookingService ?? sl<BookingService>(),
-        _businessRepository = businessRepository ?? sl<BusinessRepository>(),
+  BookingBloc({
+    BookingService? bookingService,
+    BusinessRepository? businessRepository,
+  })  : _bookingService = bookingService ?? sl<BookingService>(),
+        _businessRepository =
+            businessRepository ?? sl<BusinessRepository>(),
         super(BookingInitial()) {
-    on<LoadBookingData>(_onLoadBookingData);
-    on<SelectService>(_onSelectService);
-    on<SelectStylist>(_onSelectStylist);
-    on<SelectDate>(_onSelectDate);
-    on<SelectTime>(_onSelectTime);
-    on<ConfirmBooking>(_onConfirmBooking);
     on<ConfirmLookBooking>(_onConfirmLookBooking);
     on<CancelBooking>(_onCancelBooking);
     on<LoadBookingHistory>(_onLoadBookingHistory);
-  }
-
-  Future<void> _onLoadBookingData(
-    LoadBookingData event,
-    Emitter<BookingState> emit,
-  ) async {
-    emit(BookingLoading());
-    try {
-      final servicesSnapshot = await _businessRepository.getServices().first;
-      final stylistsSnapshot = await _businessRepository.getStylists().first;
-
-      final services = servicesSnapshot.docs
-          .map((doc) => (doc['name'] as String))
-          .toList();
-      final stylists = stylistsSnapshot.docs
-          .map((doc) => (doc['name'] as String))
-          .toList();
-
-      emit(BookingDataLoaded(
-        services: services,
-        stylists: stylists,
-      ));
-    } catch (e) {
-      emit(BookingError('Error al cargar datos: $e'));
-    }
-  }
-
-  void _onSelectService(
-    SelectService event,
-    Emitter<BookingState> emit,
-  ) {
-    final currentState = state;
-    if (currentState is BookingDataLoaded) {
-      emit(currentState.copyWith(selectedService: event.service));
-    }
-  }
-
-  void _onSelectStylist(
-    SelectStylist event,
-    Emitter<BookingState> emit,
-  ) {
-    final currentState = state;
-    if (currentState is BookingDataLoaded) {
-      emit(currentState.copyWith(selectedStylist: event.stylist));
-    }
-  }
-
-  void _onSelectDate(
-    SelectDate event,
-    Emitter<BookingState> emit,
-  ) {
-    final currentState = state;
-    if (currentState is BookingDataLoaded) {
-      emit(currentState.copyWith(selectedDate: event.date));
-    }
-  }
-
-  void _onSelectTime(
-    SelectTime event,
-    Emitter<BookingState> emit,
-  ) {
-    final currentState = state;
-    if (currentState is BookingDataLoaded) {
-      emit(currentState.copyWith(
-        selectedTime: event.time.isEmpty ? null : event.time,
-      ));
-    }
-  }
-
-  Future<void> _onConfirmBooking(
-    ConfirmBooking event,
-    Emitter<BookingState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is! BookingDataLoaded) return;
-
-    if (currentState.selectedService == null ||
-        currentState.selectedDate == null ||
-        currentState.selectedTime == null ||
-        currentState.selectedStylist == null) {
-      emit(BookingError(
-        'Por favor, completa todos los pasos para confirmar tu reserva.',
-      ));
-      return;
-    }
-
-    emit(BookingLoading());
-    try {
-      final success = await _bookingService.saveBooking(
-        service: currentState.selectedService!,
-        date: currentState.selectedDate!,
-        time: currentState.selectedTime!,
-        stylist: currentState.selectedStylist!,
-        businessId: _defaultBusinessId,
-        lookId: event.lookId,
-      );
-      if (success) {
-        emit(BookingConfirmed());
-      } else {
-        emit(BookingError('Error al confirmar la reserva. Inténtalo de nuevo.'));
-      }
-    } catch (e) {
-      emit(BookingError('Error inesperado: $e'));
-    }
   }
 
   Future<void> _onConfirmLookBooking(
@@ -148,7 +38,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
         date: event.date,
         time: event.time,
         stylist: event.stylistName,
-        businessId: _defaultBusinessId,
+        businessId: event.salonId,
         lookId: event.lookId,
         salonName: event.salonName,
         services: event.services,
@@ -163,7 +53,8 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
           await notificationService.sendNotification(
             userId: user.uid,
             title: 'Reserva confirmada',
-            message: 'Tu cita en ${event.salonName} con ${event.stylistName} el ${event.date} a las ${event.time} ha sido confirmada.',
+            message:
+                'Tu cita en ${event.salonName} con ${event.stylistName} el ${event.date} a las ${event.time} ha sido confirmada.',
           );
         }
         emit(BookingLookConfirmed(
@@ -174,7 +65,8 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
           price: event.price,
         ));
       } else {
-        emit(BookingError('Error al confirmar la reserva. Inténtalo de nuevo.'));
+        emit(BookingError(
+            'Error al confirmar la reserva. Inténtalo de nuevo.'));
       }
     } catch (e) {
       emit(BookingError('Error inesperado: $e'));

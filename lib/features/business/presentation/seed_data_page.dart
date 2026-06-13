@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
+import 'package:go_router/go_router.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 
 class SeedDataPage extends StatefulWidget {
@@ -250,6 +250,21 @@ class _SeedDataPageState extends State<SeedDataPage> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () => context.go('/admin/create-salon'),
+                icon: const Icon(Icons.admin_panel_settings, size: 18),
+                label: const Text('Admin: Crear salón para usuario'),
+                style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 12),
                 ),
               ),
               const SizedBox(height: 24),

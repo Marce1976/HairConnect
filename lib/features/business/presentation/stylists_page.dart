@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hair_connect/core/di/service_locator.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -89,11 +90,26 @@ class _StylistsPageState extends State<StylistsPage> {
                     stylist['name'] ?? '',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      await _repository.deleteStylist(stylists[index].id);
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right,
+                            color: AppColors.primary),
+                        onPressed: () => context.push(
+                          '/business/home/stylist/${stylists[index].id}?name=${Uri.encodeComponent(stylist['name'] ?? '')}',
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          await _repository.deleteStylist(stylists[index].id);
+                        },
+                      ),
+                    ],
+                  ),
+                  onTap: () => context.push(
+                    '/business/home/stylist/${stylists[index].id}?name=${Uri.encodeComponent(stylist['name'] ?? '')}',
                   ),
                 ),
               );

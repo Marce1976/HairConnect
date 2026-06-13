@@ -207,6 +207,10 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
     );
     final priceController = TextEditingController(text: look.price ?? '');
     final saleController = TextEditingController(text: look.salePrice ?? '');
+    final videoUrlController = TextEditingController(text: look.videoUrl ?? '');
+    final afterImageUrlController = TextEditingController(
+      text: look.afterImageUrl ?? '',
+    );
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -287,6 +291,32 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
                 ),
                 keyboardType: TextInputType.number,
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: videoUrlController,
+                decoration: const InputDecoration(
+                  labelText: 'URL del vídeo (opcional)',
+                  hintText: 'https://ejemplo.com/video.mp4',
+                  border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(12)),
+                              ),
+                  prefixIcon: Icon(Icons.videocam),
+                ),
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: afterImageUrlController,
+                decoration: const InputDecoration(
+                  labelText: 'URL del "después" (opcional)',
+                  hintText: 'https://ejemplo.com/despues.jpg',
+                  border: OutlineInputBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(12)),
+                              ),
+                  prefixIcon: Icon(Icons.compare),
+                ),
+                keyboardType: TextInputType.url,
+              ),
             ],
           ),
         ),
@@ -307,6 +337,8 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
                   : [];
 
               final description = descriptionController.text.trim();
+              final videoUrl = videoUrlController.text.trim();
+              final afterImageUrl = afterImageUrlController.text.trim();
 
               await _lookRepository.updateLook(look.id, {
                 'imageUrl': imageUrlController.text.trim().isNotEmpty
@@ -320,6 +352,8 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
                 'salePrice': saleController.text.trim().isNotEmpty
                     ? saleController.text.trim()
                     : null,
+                'videoUrl': videoUrl.isNotEmpty ? videoUrl : null,
+                'afterImageUrl': afterImageUrl.isNotEmpty ? afterImageUrl : null,
               });
               if (ctx.mounted) Navigator.pop(ctx);
             },

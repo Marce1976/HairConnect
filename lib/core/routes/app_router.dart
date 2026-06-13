@@ -9,10 +9,12 @@ import 'package:hair_connect/features/home/presentation/client_home_page.dart';
 import 'package:hair_connect/features/home/presentation/business_home_page.dart';
 import 'package:hair_connect/features/booking/presentation/booking_page.dart';
 import 'package:hair_connect/features/booking/presentation/booking_history_page.dart';
+import 'package:hair_connect/features/booking/presentation/my_booking_page.dart';
 import 'package:hair_connect/features/booking/presentation/bloc/booking_bloc.dart';
 import 'package:hair_connect/features/notifications/notifications_page.dart';
 import 'package:hair_connect/features/business/presentation/agenda_page.dart';
 import 'package:hair_connect/features/business/presentation/stylists_page.dart';
+import 'package:hair_connect/features/business/presentation/stylist_detail_page.dart';
 import 'package:hair_connect/features/business/presentation/services_page.dart';
 import 'package:hair_connect/features/business/presentation/stats_page.dart';
 import 'package:hair_connect/features/business/presentation/business_looks_page.dart';
@@ -25,6 +27,7 @@ import 'package:hair_connect/features/business/presentation/upload_look_page.dar
 import 'package:hair_connect/features/business/presentation/seed_data_page.dart';
 import 'package:hair_connect/features/business/presentation/salon_gallery_page.dart';
 import 'package:hair_connect/features/business/presentation/salon_edit_page.dart';
+import 'package:hair_connect/features/admin/presentation/create_salon_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -71,6 +74,18 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const StylistsPage(),
         ),
         GoRoute(
+          path: '/business/home/stylist/:stylistId',
+          builder: (context, state) {
+            final stylistId = state.pathParameters['stylistId']!;
+            final stylistName =
+                state.uri.queryParameters['name'] ?? 'Estilista';
+            return StylistDetailPage(
+              stylistId: stylistId,
+              stylistName: stylistName,
+            );
+          },
+        ),
+        GoRoute(
           path: '/business/home/services',
           builder: (context, state) => const ServicesPage(),
         ),
@@ -106,6 +121,10 @@ final GoRouter appRouter = GoRouter(
       ),
     ),
     GoRoute(
+      path: '/my-booking',
+      builder: (context, state) => const MyBookingPage(),
+    ),
+    GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationsPage(),
     ),
@@ -138,6 +157,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/upload-look',
       builder: (context, state) => const UploadLookPage(),
+    ),
+    GoRoute(
+      path: '/admin/create-salon',
+      builder: (context, state) => const CreateSalonPage(),
     ),
     GoRoute(
       path: '/seed',

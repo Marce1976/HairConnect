@@ -59,7 +59,10 @@ class BusinessShell extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Area de Negocio'),
+          title: GestureDetector(
+            onLongPress: () => context.go('/admin/create-salon'),
+            child: const Text('Area de Negocio'),
+          ),
           automaticallyImplyLeading: false,
           actions: [
             IconButton(

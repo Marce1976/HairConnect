@@ -10,6 +10,7 @@ class Salon {
   final double? rating;
   final List<String>? galleryImages;
   final GeoPoint? location;
+  final String? ownerId;
   final DateTime? createdAt;
 
   const Salon({
@@ -22,6 +23,7 @@ class Salon {
     this.rating,
     this.galleryImages,
     this.location,
+    this.ownerId,
     this.createdAt,
   });
 
@@ -38,6 +40,7 @@ class Salon {
           ? List<String>.from(map['galleryImages'] as List)
           : null,
       location: map['location'] as GeoPoint?,
+      ownerId: map['ownerId'] as String?,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -51,6 +54,7 @@ class Salon {
         '?rating': rating,
         '?galleryImages': galleryImages,
         '?location': location,
+        '?ownerId': ownerId,
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),

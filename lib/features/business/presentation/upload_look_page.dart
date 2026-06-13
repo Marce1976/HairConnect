@@ -30,6 +30,8 @@ class _UploadLookPageState extends State<UploadLookPage> {
   final _descriptionController = TextEditingController();
   final _servicesController = TextEditingController();
   final _priceController = TextEditingController();
+  final _videoUrlController = TextEditingController();
+  final _afterImageUrlController = TextEditingController();
   String? _selectedSalonId;
   String? _selectedSalonName;
   String? _selectedStylistId;
@@ -43,6 +45,8 @@ class _UploadLookPageState extends State<UploadLookPage> {
     _descriptionController.dispose();
     _servicesController.dispose();
     _priceController.dispose();
+    _videoUrlController.dispose();
+    _afterImageUrlController.dispose();
     super.dispose();
   }
 
@@ -107,6 +111,8 @@ class _UploadLookPageState extends State<UploadLookPage> {
 
       final description = _descriptionController.text.trim();
       final price = _priceController.text.trim();
+      final videoUrl = _videoUrlController.text.trim();
+      final afterImageUrl = _afterImageUrlController.text.trim();
 
       final look = Look(
         id: '',
@@ -118,6 +124,8 @@ class _UploadLookPageState extends State<UploadLookPage> {
         description: description.isNotEmpty ? description : null,
         services: services,
         price: price.isNotEmpty ? price : null,
+        videoUrl: videoUrl.isNotEmpty ? videoUrl : null,
+        afterImageUrl: afterImageUrl.isNotEmpty ? afterImageUrl : null,
         createdAt: DateTime.now(),
       );
 
@@ -160,6 +168,10 @@ class _UploadLookPageState extends State<UploadLookPage> {
               _buildServicesField(),
               const SizedBox(height: 16),
               _buildPriceField(),
+              const SizedBox(height: 16),
+              _buildVideoUrlField(),
+              const SizedBox(height: 16),
+              _buildAfterImageUrlField(),
               const SizedBox(height: 24),
               _buildSubmitButton(),
             ],
@@ -376,6 +388,36 @@ class _UploadLookPageState extends State<UploadLookPage> {
                     ),
       ),
       keyboardType: TextInputType.number,
+    );
+  }
+
+  Widget _buildVideoUrlField() {
+    return TextFormField(
+      controller: _videoUrlController,
+      decoration: const InputDecoration(
+        labelText: 'URL del vídeo (opcional)',
+        hintText: 'https://ejemplo.com/video.mp4',
+        border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+        prefixIcon: Icon(Icons.videocam),
+      ),
+      keyboardType: TextInputType.url,
+    );
+  }
+
+  Widget _buildAfterImageUrlField() {
+    return TextFormField(
+      controller: _afterImageUrlController,
+      decoration: const InputDecoration(
+        labelText: 'URL del "después" (opcional)',
+        hintText: 'https://ejemplo.com/despues.jpg',
+        border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+        prefixIcon: Icon(Icons.compare),
+      ),
+      keyboardType: TextInputType.url,
     );
   }
 

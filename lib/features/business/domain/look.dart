@@ -11,6 +11,8 @@ class Look {
   final List<String>? services;
   final String? price;
   final String? salePrice;
+  final String? videoUrl;
+  final String? afterImageUrl;
   final DateTime? createdAt;
 
   const Look({
@@ -24,11 +26,18 @@ class Look {
     this.services,
     this.price,
     this.salePrice,
+    this.videoUrl,
+    this.afterImageUrl,
     this.createdAt,
   });
 
   /// ¿Está en oferta?
   bool get onSale => salePrice != null && salePrice!.isNotEmpty;
+
+  /// ¿Tiene contenido multimedia extra (vídeo o antes/después)?
+  bool get hasMediaExtra =>
+      (videoUrl != null && videoUrl!.isNotEmpty) ||
+      (afterImageUrl != null && afterImageUrl!.isNotEmpty);
 
   factory Look.fromMap(String id, Map<String, dynamic> map) {
     return Look(
@@ -44,6 +53,8 @@ class Look {
           : null,
       price: map['price'] as String?,
       salePrice: map['salePrice'] as String?,
+      videoUrl: map['videoUrl'] as String?,
+      afterImageUrl: map['afterImageUrl'] as String?,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -58,6 +69,8 @@ class Look {
         'services': services,
         'price': price,
         'salePrice': salePrice,
+        'videoUrl': videoUrl,
+        'afterImageUrl': afterImageUrl,
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),

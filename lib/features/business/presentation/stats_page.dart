@@ -52,65 +52,99 @@ class StatsPage extends StatelessWidget {
             const SizedBox(height: 16),
 
             // ---- Ingresos e indicadores por estado ----
+            // Primero obtenemos los precios actuales del catálogo de servicios
+            // para calcular ingresos con precios vigentes, no los guardados al reservar.
             StreamBuilder<QuerySnapshot>(
-              stream: repository.getAllBookings(),
-              builder: (context, snapshot) {
-                final docs = snapshot.data?.docs ?? [];
-                final confirmed =
-                    docs.where((d) => (d.data() as Map)['status'] == 'confirmed').length;
-                final pending =
-                    docs.where((d) => (d.data() as Map)['status'] == 'pending').length;
-                final canceled =
-                    docs.where((d) => (d.data() as Map)['status'] == 'canceled').length;
-
-                double totalRevenue = 0;
-                for (final doc in docs) {
-                  final price = (doc.data() as Map)['price'] as String?;
-                  if (price != null && price.isNotEmpty) {
-                    totalRevenue += int.tryParse(price) ?? 0;
+              stream: repository.getServices(),
+              builder: (context, servicesSnapshot) {
+                // Construir mapa: nombre del servicio → precio actual (String)
+                final Map<String, String> currentPrices = {};
+                if (servicesSnapshot.hasData) {
+                  for (final doc in servicesSnapshot.data!.docs) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final name = data['name'] as String? ?? '';
+                    final price = data['price'] as String?;
+                    if (name.isNotEmpty && price != null) {
+                      currentPrices[name] = price;
+                    }
                   }
                 }
 
-                return Column(
-                  children: [
-                    _StatCard(
-                      icon: Icons.euro,
-                      title: 'Ingresos estimados',
-                      value: '€${totalRevenue.toStringAsFixed(0)}',
-                      color: Colors.green,
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Reservas por estado',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+                return StreamBuilder<QuerySnapshot>(
+                  stream: repository.getAllBookings(),
+                  builder: (context, snapshot) {
+                    final docs = snapshot.data?.docs ?? [];
+                    final confirmed =
+                        docs.where((d) => (d.data() as Map)['status'] == 'confirmed').length;
+                    final pending =
+                        docs.where((d) => (d.data() as Map)['status'] == 'pending').length;
+                    final canceled =
+                        docs.where((d) => (d.data() as Map)['status'] == 'canceled').length;
+
+                    double totalRevenue = 0;
+                    for (final doc in docs) {
+                      final data = doc.data() as Map;
+
+                      // Intentar usar precios actuales del catálogo
+                      final servicesList = data['services'] as List<dynamic>?;
+                      if (servicesList != null && servicesList.isNotEmpty) {
+                        for (final serviceName in servicesList) {
+                          final currentPrice = currentPrices[serviceName as String];
+                          if (currentPrice != null) {
+                            totalRevenue += double.tryParse(currentPrice) ?? 0;
+                          }
+                        }
+                      } else {
+                        // Fallback: precio almacenado en la reserva (legacy)
+                        final storedPrice = data['price'] as String?;
+                        if (storedPrice != null && storedPrice.isNotEmpty) {
+                          totalRevenue += double.tryParse(storedPrice) ?? 0;
+                        }
+                      }
+                    }
+
+                    return Column(
                       children: [
-                        _StatusBadge(
-                          label: 'Confirmadas',
-                          count: confirmed,
+                        _StatCard(
+                          icon: Icons.euro,
+                          title: 'Ingresos estimados',
+                          value: '€${totalRevenue.toStringAsFixed(2)}',
                           color: Colors.green,
                         ),
-                        const SizedBox(width: 12),
-                        _StatusBadge(
-                          label: 'Pendientes',
-                          count: pending,
-                          color: Colors.orange,
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Reservas por estado',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        _StatusBadge(
-                          label: 'Canceladas',
-                          count: canceled,
-                          color: Colors.red,
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _StatusBadge(
+                              label: 'Confirmadas',
+                              count: confirmed,
+                              color: Colors.green,
+                            ),
+                            const SizedBox(width: 12),
+                            _StatusBadge(
+                              label: 'Pendientes',
+                              count: pending,
+                              color: Colors.orange,
+                            ),
+                            const SizedBox(width: 12),
+                            _StatusBadge(
+                              label: 'Canceladas',
+                              count: canceled,
+                              color: Colors.red,
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                  ],
+                    );
+                  },
                 );
               },
             ),

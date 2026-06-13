@@ -141,11 +141,12 @@ class _ClientHomePageState extends State<ClientHomePage> {
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     onPressed: () {
-                      context.push('/booking');
+                      context.push('/my-booking');
                     },
-                    child: const Text('Reservar Cita'),
+                    icon: const Icon(Icons.calendar_today),
+                    label: const Text('Mi Cita'),
                   ),
                 ),
                 const SizedBox(height: 16),

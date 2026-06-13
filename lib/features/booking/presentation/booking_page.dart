@@ -8,6 +8,10 @@ import 'package:hair_connect/features/business/data/look_repository.dart';
 import 'package:hair_connect/features/business/domain/look.dart';
 import 'package:hair_connect/features/booking/presentation/bloc/booking_bloc.dart';
 
+/// Pantalla de confirmación de reserva desde un Look.
+///
+/// Muestra los detalles del look (imagen, salón, estilista, servicios, precio)
+/// y permite al cliente seleccionar fecha y hora para confirmar.
 class BookingPage extends StatefulWidget {
   final String? lookId;
 
@@ -18,9 +22,6 @@ class BookingPage extends StatefulWidget {
 }
 
 class _BookingPageState extends State<BookingPage> {
-  int _currentStep = 0;
-
-  // Estado para el flujo desde Look
   Look? _look;
   bool _lookLoading = true;
   String? _selectedDate;
@@ -31,8 +32,6 @@ class _BookingPageState extends State<BookingPage> {
     super.initState();
     if (widget.lookId != null) {
       _loadLook();
-    } else {
-      context.read<BookingBloc>().add(LoadBookingData());
     }
   }
 
@@ -63,12 +62,7 @@ class _BookingPageState extends State<BookingPage> {
   Widget build(BuildContext context) {
     return BlocListener<BookingBloc, BookingState>(
       listener: (context, state) {
-        if (state is BookingConfirmed) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Reserva confirmada exitosamente.')),
-          );
-          context.pop();
-        } else if (state is BookingLookConfirmed) {
+        if (state is BookingLookConfirmed) {
           _showSuccessOverlay(state);
         } else if (state is BookingError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -77,151 +71,152 @@ class _BookingPageState extends State<BookingPage> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(widget.lookId != null ? 'Confirmar reserva' : 'Reserva tu cita')),
+        appBar: AppBar(
+          title: const Text('Confirmar reserva'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+        ),
         body: _buildBody(),
       ),
     );
   }
 
   Widget _buildBody() {
-    // Flujo desde un Look
-    if (widget.lookId != null) {
-      if (_lookLoading) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      if (_look == null) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: AppColors.textGrey),
-              const SizedBox(height: 16),
-              const Text(
-                'No se pudo cargar el look',
-                style: TextStyle(color: AppColors.textGrey),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => context.pop(),
-                child: const Text('Volver'),
-              ),
-            ],
-          ),
-        );
-      }
-      return _buildLookBookingForm(_look!);
+    if (widget.lookId == null) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search, size: 64, color: AppColors.textGrey),
+            SizedBox(height: 16),
+            Text(
+              'Selecciona un look desde el catálogo\npara hacer una reserva',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textGrey, fontSize: 15),
+            ),
+          ],
+        ),
+      );
     }
 
-    // Flujo normal (stepper)
-    return BlocBuilder<BookingBloc, BookingState>(
-      builder: (context, state) {
-        if (state is BookingInitial || state is BookingLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (state is BookingDataLoaded) {
-          return _buildStepper(state);
-        }
-        if (state is BookingError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  state.message,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textGrey),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    context.read<BookingBloc>().add(LoadBookingData());
-                  },
-                  child: const Text('Reintentar'),
-                ),
-              ],
+    if (_lookLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_look == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline,
+                size: 64, color: AppColors.textGrey),
+            const SizedBox(height: 16),
+            const Text(
+              'No se pudo cargar el look',
+              style: TextStyle(color: AppColors.textGrey, fontSize: 16),
             ),
-          );
-        }
-        return const Center(child: CircularProgressIndicator());
-      },
-    );
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.pop(),
+              child: const Text('Volver'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _buildBookingForm(_look!);
   }
 
-  // ──────── Formulario rápido desde Look ────────
-
-  Widget _buildLookBookingForm(Look look) {
+  Widget _buildBookingForm(Look look) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagen del look
+          // ─── Imagen del look ───
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: SizedBox(
               width: double.infinity,
-              height: 150,
+              height: 200,
               child: Image.network(
                 look.imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => Container(
                   color: AppColors.primary.withValues(alpha: 0.1),
-                  child: const Icon(Icons.broken_image, color: AppColors.textGrey),
+                  child: const Icon(Icons.broken_image,
+                      color: AppColors.textGrey),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Salón
+          // ─── Salón y estilista ───
           Row(
             children: [
-              const Icon(Icons.store, size: 18, color: AppColors.textGrey),
+              const Icon(Icons.store, size: 20, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   look.salonName,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
+          if (look.stylistName != null)
+            Row(
+              children: [
+                const Icon(Icons.person, size: 18, color: AppColors.textGrey),
+                const SizedBox(width: 8),
+                Text(
+                  look.stylistName!,
+                  style: const TextStyle(
+                      fontSize: 15, color: AppColors.textGrey),
+                ),
+              ],
+            ),
+          const SizedBox(height: 16),
 
-          // Estilista
-          Row(
-            children: [
-              const Icon(Icons.person, size: 18, color: AppColors.textGrey),
-              const SizedBox(width: 8),
-              Text(
-                look.stylistName ?? 'Sin asignar',
-                style: const TextStyle(fontSize: 15, color: AppColors.textDark),
+          // ─── Servicios ───
+          if (look.services != null && look.services!.isNotEmpty) ...[
+            const Text(
+              'Servicios incluidos',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: AppColors.textGrey,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Servicios
-          if (look.services != null && look.services!.isNotEmpty)
+            ),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: look.services!
                   .map((s) => Chip(
                         label: Text(s),
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                        backgroundColor:
+                            AppColors.primary.withValues(alpha: 0.1),
                         side: BorderSide.none,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                       ))
                   .toList(),
             ),
-          if (look.services != null && look.services!.isNotEmpty)
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+          ],
 
-          // Precio
-          if (look.price != null && look.price!.isNotEmpty)
+          // ─── Precio ───
+          if (look.price != null && look.price!.isNotEmpty) ...[
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: look.onSale
                     ? Colors.red.withValues(alpha: 0.05)
@@ -235,108 +230,204 @@ class _BookingPageState extends State<BookingPage> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.euro, color: look.onSale ? Colors.red : AppColors.primary, size: 24),
-                  const SizedBox(width: 4),
+                  Icon(Icons.euro,
+                      color:
+                          look.onSale ? Colors.red : AppColors.primary,
+                      size: 28),
+                  const SizedBox(width: 8),
                   if (look.onSale) ...[
                     Text(
                       '€${look.price!}',
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         decoration: TextDecoration.lineThrough,
                         color: AppColors.textGrey,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Text(
                       '€${look.salePrice!}',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red),
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'OFERTA',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ] else
                     Text(
-                      look.price!,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      '€${look.price!}',
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
                     ),
                 ],
               ),
             ),
-          if (look.price != null && look.price!.isNotEmpty)
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+          ],
 
+          // ─── Fecha y hora ───
           const Divider(),
-          const SizedBox(height: 8),
-
-          // Fecha
-          const Text('Fecha', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-          const SizedBox(height: 8),
-          TextField(
-            readOnly: true,
-            decoration: const InputDecoration(
-              hintText: 'Selecciona una fecha',
-              suffixIcon: Icon(Icons.calendar_today),
-              border: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(12)),
-                            ),
+          const SizedBox(height: 12),
+          const Text(
+            'Elige fecha y hora',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: AppColors.textDark,
             ),
-            controller: TextEditingController(text: _selectedDate ?? ''),
-            onTap: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(const Duration(days: 365)),
-              );
-              if (picked != null && mounted) {
-                setState(() {
-                  _selectedDate = '${picked.day}/${picked.month}/${picked.year}';
-                });
-              }
-            },
           ),
           const SizedBox(height: 16),
 
-          // Hora
-          const Text('Hora', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: List.generate(8, (index) {
-              final time = '${9 + index}:00';
-              return ChoiceChip(
-                label: Text(time),
-                selected: _selectedTime == time,
-                onSelected: (selected) {
-                  setState(() => _selectedTime = selected ? time : '');
-                },
-              );
-            }),
-          ),
-          const SizedBox(height: 24),
+          // Fecha
+          _buildDatePicker(),
+          const SizedBox(height: 16),
 
-          // Botón confirmar
+          // Hora
+          _buildTimePicker(),
+          const SizedBox(height: 32),
+
+          // ─── Botón confirmar ───
           SizedBox(
             width: double.infinity,
+            height: 52,
             child: ElevatedButton(
-              onPressed: _selectedDate != null && _selectedTime != null && _selectedTime!.isNotEmpty
-                  ? () => _confirmLookBooking(look)
-                  : null,
+              onPressed:
+                  _selectedDate != null &&
+                          _selectedTime != null &&
+                          _selectedTime!.isNotEmpty
+                      ? () => _confirmBooking(look)
+                      : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
               ),
               child: const Text(
                 'Confirmar reserva',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    fontSize: 17, fontWeight: FontWeight.bold),
               ),
             ),
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  void _confirmLookBooking(Look look) {
+  Widget _buildDatePicker() {
+    return InkWell(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: DateTime.now(),
+          firstDate: DateTime.now(),
+          lastDate: DateTime.now().add(const Duration(days: 365)),
+        );
+        if (picked != null && mounted) {
+          setState(() {
+            _selectedDate =
+                '${picked.day}/${picked.month}/${picked.year}';
+          });
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.calendar_today,
+                color: AppColors.primary, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _selectedDate ?? 'Selecciona una fecha',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: _selectedDate != null
+                      ? AppColors.textDark
+                      : AppColors.textGrey,
+                ),
+              ),
+            ),
+            if (_selectedDate != null)
+              GestureDetector(
+                onTap: () => setState(() => _selectedDate = null),
+                child: const Icon(Icons.close,
+                    size: 18, color: AppColors.textGrey),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimePicker() {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: List.generate(10, (index) {
+        final time = '${9 + index}:00';
+        final isSelected = _selectedTime == time;
+        return ChoiceChip(
+          label: SizedBox(
+            width: 60,
+            child: Center(
+              child: Text(
+                time,
+                style: TextStyle(
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.white : AppColors.textDark,
+                ),
+              ),
+            ),
+          ),
+          selected: isSelected,
+          selectedColor: AppColors.primary,
+          backgroundColor: AppColors.background,
+          side: BorderSide(
+            color: isSelected ? AppColors.primary : Colors.grey.shade300,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          onSelected: (selected) {
+            setState(() => _selectedTime = selected ? time : '');
+          },
+        );
+      }),
+    );
+  }
+
+  void _confirmBooking(Look look) {
     final finalPrice = look.onSale ? look.salePrice! : (look.price ?? '');
     context.read<BookingBloc>().add(ConfirmLookBooking(
           lookId: look.id,
@@ -355,7 +446,9 @@ class _BookingPageState extends State<BookingPage> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -363,14 +456,18 @@ class _BookingPageState extends State<BookingPage> {
             const SizedBox(height: 16),
             const Text(
               '¡Reserva confirmada!',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             _detailRow(Icons.store, state.salonName),
             _detailRow(Icons.person, state.stylistName),
             _detailRow(Icons.calendar_today, state.date),
             _detailRow(Icons.access_time, state.time),
-            _detailRow(Icons.attach_money, state.price),
+            _detailRow(Icons.attach_money, '€${state.price}'),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -383,9 +480,12 @@ class _BookingPageState extends State<BookingPage> {
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('Volver al inicio', style: TextStyle(fontSize: 16)),
+                child: const Text('Volver al catálogo',
+                    style: TextStyle(fontSize: 16)),
               ),
             ),
           ],
@@ -402,120 +502,12 @@ class _BookingPageState extends State<BookingPage> {
           Icon(icon, size: 18, color: AppColors.textGrey),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 15, color: AppColors.textDark)),
+            child: Text(text,
+                style: const TextStyle(
+                    fontSize: 15, color: AppColors.textDark)),
           ),
         ],
       ),
-    );
-  }
-
-  // ──────── Stepper original (sin lookId) ────────
-
-  Widget _buildStepper(BookingDataLoaded state) {
-    return Stepper(
-      currentStep: _currentStep,
-      onStepContinue: () {
-        if (_currentStep < 3) {
-          setState(() => _currentStep++);
-        } else {
-          context.read<BookingBloc>().add(ConfirmBooking(lookId: widget.lookId));
-        }
-      },
-      onStepCancel: () {
-        if (_currentStep > 0) {
-          setState(() => _currentStep--);
-        }
-      },
-      steps: [
-        Step(
-          title: const Text('Seleccionar Servicio'),
-          isActive: _currentStep >= 0,
-          content: RadioGroup<String>(
-            groupValue: state.selectedService,
-            onChanged: (String? value) {
-              if (value != null) {
-                context.read<BookingBloc>().add(SelectService(value));
-              }
-            },
-            child: Column(
-              children: state.services.map((service) {
-                return RadioListTile<String>(
-                  title: Text(service),
-                  value: service,
-                  activeColor: AppColors.primary,
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-        Step(
-          title: const Text('Estilista'),
-          isActive: _currentStep >= 1,
-          content: RadioGroup<String>(
-            groupValue: state.selectedStylist,
-            onChanged: (String? value) {
-              if (value != null) {
-                context.read<BookingBloc>().add(SelectStylist(value));
-              }
-            },
-            child: Column(
-              children: state.stylists.map((stylist) {
-                return RadioListTile<String>(
-                  title: Text(stylist),
-                  value: stylist,
-                  activeColor: AppColors.primary,
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-        Step(
-          title: const Text('Seleccionar Fecha'),
-          isActive: _currentStep >= 2,
-          content: TextField(
-            readOnly: true,
-            decoration: const InputDecoration(
-              hintText: 'Selecciona una fecha',
-              suffixIcon: Icon(Icons.calendar_today),
-            ),
-            onTap: () async {
-              DateTime? pickedDate = await showDatePicker(
-                context: context,
-                initialDate: DateTime.now(),
-                firstDate: DateTime.now(),
-                lastDate: DateTime.now().add(const Duration(days: 365)),
-              );
-              if (pickedDate != null && mounted) {
-                context.read<BookingBloc>().add(
-                  SelectDate(
-                    '${pickedDate.day}/${pickedDate.month}/${pickedDate.year}',
-                  ),
-                );
-              }
-            },
-            controller: TextEditingController(text: state.selectedDate),
-          ),
-        ),
-        Step(
-          title: const Text('Seleccionar Hora'),
-          isActive: _currentStep >= 3,
-          content: Wrap(
-            spacing: 8.0,
-            children: List.generate(8, (index) {
-              final time = '${9 + index}:00';
-              return ChoiceChip(
-                label: Text(time),
-                selected: state.selectedTime == time,
-                onSelected: (selected) {
-                  context.read<BookingBloc>().add(
-                    SelectTime(selected ? time : ''),
-                  );
-                },
-              );
-            }),
-          ),
-        ),
-      ],
     );
   }
 }

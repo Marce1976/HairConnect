@@ -148,20 +148,41 @@ class BusinessRepository {
     }
   }
 
+  /// Busca el salón asignado al owner (usuario business).
+  /// Devuelve `null` si el usuario no tiene salón asignado.
+  Future<Salon?> getSalonByOwnerId(String ownerId) async {
+    try {
+      final snapshot = await _db
+          .collection('salons')
+          .where('ownerId', isEqualTo: ownerId)
+          .limit(1)
+          .get();
+      if (snapshot.docs.isEmpty) return null;
+      final doc = snapshot.docs.first;
+      return Salon.fromMap(doc.id, doc.data());
+    } catch (e) {
+      throw Exception('Error al obtener salón del usuario: $e');
+    }
+  }
+
+  /// Crea un salón asignado a un owner.
+  /// Solo debería usarse desde el panel de administración.
   Future<String> createSalon({
     required String name,
     required String address,
     String? city,
     String? phone,
     String? description,
+    String? ownerId,
   }) async {
     try {
       final doc = await _db.collection('salons').add({
         'name': name,
         'address': address,
-        '?city': city,
-        '?phone': phone,
-        '?description': description,
+        'city': city,
+        'phone': phone,
+        'description': description,
+        'ownerId': ownerId,
         'createdAt': FieldValue.serverTimestamp(),
       });
       return doc.id;
@@ -213,6 +234,94 @@ class BusinessRepository {
           .toList();
     } catch (e) {
       throw Exception('Error al buscar salones: $e');
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Gestión de servicios por estilista
+  // ─────────────────────────────────────────────
+
+  /// Obtiene el mapa de servicios asignados a un estilista con sus contadores.
+  /// Retorna `null` si el estilista no tiene servicios asignados.
+  /// El mapa tiene la forma `{ serviceId: { name: String, count: int } }`.
+  Future<Map<String, Map<String, dynamic>>?> getStylistServices(
+      String stylistId) async {
+    try {
+      final doc =
+          await _db.collection('stylist_services').doc(stylistId).get();
+      if (!doc.exists) return null;
+      final data = doc.data()!;
+      final services = data['services'] as Map<String, dynamic>?;
+      if (services == null) return null;
+      return services.map(
+        (key, value) => MapEntry(
+            key, Map<String, dynamic>.from(value as Map<String, dynamic>)),
+      );
+    } catch (e) {
+      throw Exception('Error al obtener servicios del estilista: $e');
+    }
+  }
+
+  /// Asigna un servicio a un estilista (o lo actualiza si ya existe).
+  /// El contador comienza en 0.
+  Future<void> assignServiceToStylist({
+    required String stylistId,
+    required String serviceId,
+    required String serviceName,
+  }) async {
+    try {
+      await _db.collection('stylist_services').doc(stylistId).set({
+        'services': {
+          serviceId: {
+            'name': serviceName,
+            'count': 0,
+          },
+        },
+      }, SetOptions(merge: true));
+    } catch (e) {
+      throw Exception('Error al asignar servicio: $e');
+    }
+  }
+
+  /// Incrementa en 1 el contador de un servicio para un estilista.
+  Future<void> incrementServiceCount({
+    required String stylistId,
+    required String serviceId,
+  }) async {
+    try {
+      await _db.collection('stylist_services').doc(stylistId).update({
+        'services.$serviceId.count': FieldValue.increment(1),
+      });
+    } catch (e) {
+      throw Exception('Error al incrementar contador: $e');
+    }
+  }
+
+  /// Decrementa en 1 el contador de un servicio para un estilista.
+  Future<void> decrementServiceCount({
+    required String stylistId,
+    required String serviceId,
+  }) async {
+    try {
+      await _db.collection('stylist_services').doc(stylistId).update({
+        'services.$serviceId.count': FieldValue.increment(-1),
+      });
+    } catch (e) {
+      throw Exception('Error al decrementar contador: $e');
+    }
+  }
+
+  /// Elimina un servicio de la lista de un estilista.
+  Future<void> removeServiceFromStylist({
+    required String stylistId,
+    required String serviceId,
+  }) async {
+    try {
+      await _db.collection('stylist_services').doc(stylistId).update({
+        'services.$serviceId': FieldValue.delete(),
+      });
+    } catch (e) {
+      throw Exception('Error al eliminar servicio del estilista: $e');
     }
   }
 
