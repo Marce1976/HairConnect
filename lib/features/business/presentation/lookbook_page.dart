@@ -1,129 +1,480 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:hair_connect/core/di/service_locator.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hair_connect/features/business/data/business_repository.dart';
-import 'package:hair_connect/features/business/domain/salon.dart';
+import 'package:hair_connect/features/business/data/favorite_service.dart';
+import 'package:hair_connect/features/business/data/look_repository.dart';
+import 'package:hair_connect/features/business/domain/look.dart';
 
-class LookBookPage extends StatelessWidget {
+class LookBookPage extends StatefulWidget {
   const LookBookPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final repository = sl<BusinessRepository>();
+  State<LookBookPage> createState() => _LookBookPageState();
+}
 
+class _LookBookPageState extends State<LookBookPage> {
+  final LookRepository _lookRepository = sl<LookRepository>();
+  final BusinessRepository _businessRepository = sl<BusinessRepository>();
+  final FavoriteService _favoriteService = sl<FavoriteService>();
+
+  String? _selectedSalonId;
+  String? _selectedStylistName;
+  String? _selectedCity;
+  Set<String> _favoriteIds = {};
+  StreamSubscription<QuerySnapshot>? _favoritesSubscription;
+
+  /// Mapa: ciudad -> lista de salonIds
+  Map<String, List<String>> _salonsByCity = {};
+  List<String> _cities = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCities();
+    _favoritesSubscription = _favoriteService.getFavoritesStream().listen(
+      (snapshot) {
+        if (!mounted) return;
+        setState(() {
+          _favoriteIds = snapshot.docs
+              .map((doc) => doc['lookId'] as String)
+              .toSet();
+        });
+      },
+      onError: (_) {},
+    );
+  }
+
+  Future<void> _loadCities() async {
+    final snapshot = await _businessRepository.getSalons().first;
+    final map = <String, List<String>>{};
+    for (final doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final city = data['city'] as String?;
+      if (city != null && city.isNotEmpty) {
+        map.putIfAbsent(city, () => []);
+        map[city]!.add(doc.id);
+      }
+    }
+    if (mounted) {
+      setState(() {
+        _salonsByCity = map;
+        _cities = map.keys.toList()..sort();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _favoritesSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Look & Book')),
+      floatingActionButton: FloatingActionButton.small(
+        backgroundColor: AppColors.primary,
+        onPressed: () => context.push('/seed'),
+        tooltip: 'Poblar datos de ejemplo',
+        child: const Icon(Icons.storage, color: Colors.white),
+      ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: repository.getSalons(),
+        stream: _lookRepository.getLooks(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          final isLoading = snapshot.connectionState == ConnectionState.waiting;
+          final looks = snapshot.data?.docs ?? [];
 
-          // Recopilar todas las imágenes de todos los salones
-          final allImages = <MapEntry<Salon, String>>[];
-          for (final doc in snapshot.data?.docs ?? []) {
-            final data = doc.data() as Map<String, dynamic>;
-            final salon = Salon.fromMap(doc.id, data);
-            if (salon.galleryImages != null) {
-              for (final url in salon.galleryImages!) {
-                allImages.add(MapEntry(salon, url));
-              }
+          final stylistNames = looks
+              .map((doc) => doc['stylistName'] as String?)
+              .where((name) => name != null && name.isNotEmpty)
+              .map((name) => name!)
+              .toSet()
+              .toList()
+            ..sort();
+
+          final allLooks = looks
+              .map((doc) =>
+                  Look.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+              .toList();
+
+          // Obtener los salonIds de la ciudad seleccionada
+          final salonIdsInCity = _selectedCity != null
+              ? (_salonsByCity[_selectedCity] ?? [])
+              : null;
+
+          final filteredLooks = allLooks.where((look) {
+            if (salonIdsInCity != null &&
+                !salonIdsInCity.contains(look.salonId)) {
+              return false;
             }
-          }
+            if (_selectedSalonId != null &&
+                look.salonId != _selectedSalonId) {
+              return false;
+            }
+            if (_selectedStylistName != null &&
+                look.stylistName != _selectedStylistName) {
+              return false;
+            }
+            return true;
+          }).toList();
 
-          if (allImages.isEmpty) {
-            return const Center(
-              child: Text('No hay imágenes disponibles aún'),
-            );
-          }
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(8),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 0.8,
-            ),
-            itemCount: allImages.length,
-            itemBuilder: (context, index) {
-              final entry = allImages[index];
-              return GestureDetector(
-                onTap: () =>
-                    _showBookingDialog(context, entry.key, entry.value),
-                child: Card(
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Image.network(
-                          entry.value,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          errorBuilder: (_, _, _) => Container(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            child: const Icon(Icons.broken_image, size: 48),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Text(
-                          entry.key.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
+          return Column(
+            children: [
+              _buildFilters(stylistNames),
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : filteredLooks.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No hay looks disponibles',
+                              style: TextStyle(color: AppColors.textGrey),
+                            ),
+                          )
+                        : _buildGrid(filteredLooks),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  void _showBookingDialog(
-      BuildContext outerContext, Salon salon, String imageUrl) {
-    showDialog(
-      context: outerContext,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(salon.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(imageUrl, height: 200, fit: BoxFit.cover),
+  Widget _buildFilters(List<String> stylistNames) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Filtro de ciudad
+          if (_cities.isNotEmpty)
+            SizedBox(
+              height: 36,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _CityChipLook(
+                    label: 'Todas',
+                    selected: _selectedCity == null,
+                    onTap: () => setState(() {
+                      _selectedCity = null;
+                      _selectedSalonId = null;
+                    }),
+                  ),
+                  ..._cities.map(
+                    (city) => _CityChipLook(
+                      label: city,
+                      selected: _selectedCity == city,
+                      onTap: () => setState(() {
+                        _selectedCity = city;
+                        _selectedSalonId = null;
+                      }),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            const Text('¿Quieres reservar una cita en este salón?'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              outerContext.push('/booking');
-            },
-            child: const Text('Reservar ahora'),
+          if (_cities.isNotEmpty) const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: _businessRepository.getSalons(),
+                  builder: (context, snapshot) {
+                    final salons = snapshot.data?.docs ?? [];
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String?>(
+                          value: _selectedSalonId,
+                          isExpanded: true,
+                          isDense: true,
+                          hint: const Text('Salón',
+                              style: TextStyle(fontSize: 14)),
+                          items: [
+                            DropdownMenuItem(
+                              value: null,
+                              child: Text('Todos',
+                                  style:
+                                      TextStyle(color: AppColors.textGrey)),
+                            ),
+                            ...salons.map((doc) {
+                              final data =
+                                  doc.data() as Map<String, dynamic>;
+                              return DropdownMenuItem(
+                                value: doc.id,
+                                child: Text(
+                                  data['name'] as String? ?? '',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => _selectedSalonId = value),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String?>(
+                        value: _selectedStylistName,
+                      isExpanded: true,
+                      isDense: true,
+                      hint: const Text('Estilista',
+                              style: TextStyle(fontSize: 14)),
+                      items: [
+                        DropdownMenuItem(
+                          value: null,
+                          child: Text('Todos',
+                              style: TextStyle(color: AppColors.textGrey)),
+                        ),
+                        ...stylistNames.map((name) => DropdownMenuItem(
+                              value: name,
+                              child: Text(
+                                name,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            )),
+                      ],
+                      onChanged: (value) =>
+                          setState(() => _selectedStylistName = value),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGrid(List<Look> looks) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.75,
+      ),
+      itemCount: looks.length,
+      itemBuilder: (context, index) => _buildLookCard(looks[index]),
+    );
+  }
+
+  Widget _buildLookCard(Look look) {
+    final isFavorite = _favoriteIds.contains(look.id);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: () => context.push('/lookbook/${look.id}'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    look.imageUrl,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    errorBuilder: (_, _, _) => Container(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      child: const Icon(Icons.broken_image, size: 48),
+                    ),
+                  ),
+                  if (look.onSale)
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          'OFERTA',
+                          style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color:
+                              isFavorite ? AppColors.gold : Colors.white,
+                        ),
+                        onPressed: () => _favoriteService
+                            .toggleFavorite(look.id, look.salonId),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    look.salonName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (look.stylistName != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      look.stylistName!,
+                      style: const TextStyle(
+                        color: AppColors.textGrey,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (look.services != null && look.services!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      look.services!.join(', '),
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  if (look.price != null && look.price!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    look.onSale
+                        ? Row(
+                            children: [
+                              Text(
+                                '€${look.price}',
+                                style: const TextStyle(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: AppColors.textGrey,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '€${look.salePrice}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'OFERTA',
+                                  style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          )
+                        : Text(
+                            '€${look.price}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                              fontSize: 13,
+                            ),
+                          ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// Chip de filtro de ciudad en LookBook
+// ────────────────────────────────────────────────────────────
+class _CityChipLook extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CityChipLook({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(label, style: const TextStyle(fontSize: 13)),
+        selected: selected,
+        onSelected: (_) => onTap(),
+        selectedColor: AppColors.primary.withValues(alpha: 0.15),
+        side: BorderSide(
+          color: selected ? AppColors.primary : Colors.grey.shade300,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+        visualDensity: VisualDensity.compact,
       ),
     );
   }

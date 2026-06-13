@@ -82,6 +82,8 @@ class SalonDetailPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
+                _buildGalleryLink(context, salon),
+                const SizedBox(height: 24),
                 _buildSection(
                   title: 'Servicios',
                   child: _buildServicesList(context),
@@ -163,6 +165,53 @@ class SalonDetailPage extends StatelessWidget {
                 ],
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGalleryLink(BuildContext context, Salon salon) {
+    return InkWell(
+      onTap: () => context.push('/salons/${salon.id}/gallery'),
+      borderRadius: BorderRadius.circular(12),
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                child: const Icon(Icons.photo_library,
+                    color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Galería',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      '${salon.galleryImages?.length ?? 0} imágenes',
+                      style: const TextStyle(
+                        color: AppColors.textGrey,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textGrey),
+            ],
+          ),
         ),
       ),
     );
@@ -271,7 +320,7 @@ class SalonDetailPage extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
-                  '${data['duration'] as String? ?? ''} min - \$${data['price'] as String? ?? ''}',
+                  '${data['duration'] as String? ?? ''} min - €${data['price'] as String? ?? ''}',
                   style: const TextStyle(color: AppColors.textGrey),
                 ),
               ),

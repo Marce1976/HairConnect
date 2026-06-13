@@ -6,6 +6,9 @@ import 'package:hair_connect/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:hair_connect/features/booking/data/booking_service.dart';
 import 'package:hair_connect/features/booking/presentation/bloc/booking_bloc.dart';
 import 'package:hair_connect/features/business/data/business_repository.dart';
+import 'package:hair_connect/features/business/data/look_repository.dart';
+import 'package:hair_connect/features/business/data/favorite_service.dart';
+import 'package:hair_connect/core/services/fcm_service.dart';
 import 'package:hair_connect/core/services/notification_service.dart';
 import 'package:hair_connect/core/services/storage_service.dart';
 
@@ -18,8 +21,11 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<UserService>(() => UserService());
   sl.registerLazySingleton<BookingService>(() => BookingService());
   sl.registerLazySingleton<BusinessRepository>(() => BusinessRepository());
+  sl.registerLazySingleton<LookRepository>(() => LookRepository());
+  sl.registerLazySingleton<FavoriteService>(() => FavoriteService());
   sl.registerLazySingleton<NotificationService>(() => NotificationService());
   sl.registerLazySingleton<StorageService>(() => StorageService());
+  sl.registerLazySingleton<FcmService>(() => FcmService());
 
   // BLoCs
   sl.registerFactory<AuthBloc>(() => AuthBloc());

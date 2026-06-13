@@ -29,7 +29,9 @@ class _ServicesPageState extends State<ServicesPage> {
               controller: nameController,
               decoration: const InputDecoration(
                 labelText: 'Nombre del Servicio',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                            ),
               ),
             ),
             const SizedBox(height: 12.0),
@@ -37,7 +39,9 @@ class _ServicesPageState extends State<ServicesPage> {
               controller: priceController,
               decoration: const InputDecoration(
                 labelText: 'Precio (€)',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                            ),
               ),
               keyboardType: TextInputType.number,
             ),
@@ -46,7 +50,9 @@ class _ServicesPageState extends State<ServicesPage> {
               controller: durationController,
               decoration: const InputDecoration(
                 labelText: 'Duración (minutos)',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                            ),
               ),
               keyboardType: TextInputType.number,
             ),
@@ -68,6 +74,73 @@ class _ServicesPageState extends State<ServicesPage> {
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('Agregar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditServiceDialog(String serviceId, String currentName, String currentPrice, String currentDuration) {
+    final nameController = TextEditingController(text: currentName);
+    final priceController = TextEditingController(text: currentPrice);
+    final durationController = TextEditingController(text: currentDuration);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Editar Servicio'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nombre del Servicio',
+                border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                            ),
+              ),
+            ),
+            const SizedBox(height: 12.0),
+            TextField(
+              controller: priceController,
+              decoration: const InputDecoration(
+                labelText: 'Precio (€)',
+                border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                            ),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12.0),
+            TextField(
+              controller: durationController,
+              decoration: const InputDecoration(
+                labelText: 'Duración (minutos)',
+                border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                            ),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty || priceController.text.trim().isEmpty || durationController.text.trim().isEmpty) return;
+              await _repository.updateService(
+                serviceId: serviceId,
+                name: nameController.text.trim(),
+                price: priceController.text.trim(),
+                duration: durationController.text.trim(),
+              );
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Guardar'),
           ),
         ],
       ),
@@ -117,14 +190,28 @@ class _ServicesPageState extends State<ServicesPage> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    '${service['duration'] ?? ''} minutos' ' - ${service['price'] ?? ''}',
+                    '${service['duration'] ?? ''} minutos' ' - €${service['price'] ?? ''}',
                     style: const TextStyle(color: AppColors.textGrey),
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      await _repository.deleteService(services[index].id);
-                    },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: AppColors.primary),
+                        onPressed: () => _showEditServiceDialog(
+                          services[index].id,
+                          service['name'] as String? ?? '',
+                          service['price'] as String? ?? '',
+                          service['duration'] as String? ?? '',
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          await _repository.deleteService(services[index].id);
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );

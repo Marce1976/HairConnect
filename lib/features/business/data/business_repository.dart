@@ -91,6 +91,23 @@ class BusinessRepository {
     }
   }
 
+  Future<void> updateService({
+    required String serviceId,
+    required String name,
+    required String price,
+    required String duration,
+  }) async {
+    try {
+      await _db.collection('services').doc(serviceId).update({
+        'name': name,
+        'price': price,
+        'duration': duration,
+      });
+    } catch (e) {
+      throw Exception('Error al actualizar servicio: $e');
+    }
+  }
+
   Future<void> deleteService(String serviceId) async {
     try {
       await _db.collection('services').doc(serviceId).delete();
@@ -103,11 +120,74 @@ class BusinessRepository {
     return _db.collection('salons').snapshots();
   }
 
+  /// Devuelve todos los salones de una ciudad específica.
+  Stream<QuerySnapshot> getSalonsByCity(String city) {
+    return _db
+        .collection('salons')
+        .where('city', isEqualTo: city)
+        .snapshots();
+  }
+
+  /// Devuelve una lista de ciudades disponibles (única por salón).
+  Future<List<String>> getAvailableCities() async {
+    final snapshot = await _db.collection('salons').get();
+    final cities = snapshot.docs
+        .map((doc) => (doc.data()['city'] as String?) ?? '')
+        .where((c) => c.isNotEmpty)
+        .toSet()
+        .toList();
+    cities.sort();
+    return cities;
+  }
+
   Future<DocumentSnapshot> getSalonById(String salonId) async {
     try {
       return await _db.collection('salons').doc(salonId).get();
     } catch (e) {
       throw Exception('Error al obtener salón: $e');
+    }
+  }
+
+  Future<String> createSalon({
+    required String name,
+    required String address,
+    String? city,
+    String? phone,
+    String? description,
+  }) async {
+    try {
+      final doc = await _db.collection('salons').add({
+        'name': name,
+        'address': address,
+        '?city': city,
+        '?phone': phone,
+        '?description': description,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return doc.id;
+    } catch (e) {
+      throw Exception('Error al crear salón: $e');
+    }
+  }
+
+  Future<void> updateSalon({
+    required String salonId,
+    required String name,
+    required String address,
+    String? city,
+    String? phone,
+    String? description,
+  }) async {
+    try {
+      await _db.collection('salons').doc(salonId).update({
+        'name': name,
+        'address': address,
+        '?city': city,
+        '?phone': phone,
+        '?description': description,
+      });
+    } catch (e) {
+      throw Exception('Error al actualizar salón: $e');
     }
   }
 

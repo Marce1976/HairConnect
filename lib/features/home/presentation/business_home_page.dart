@@ -15,7 +15,9 @@ class BusinessShell extends StatelessWidget {
   int _currentIndex(String location) {
     if (location.contains('/business/home/stylists')) return 1;
     if (location.contains('/business/home/services')) return 2;
-    if (location.contains('/business/home/stats')) return 3;
+    if (location.contains('/business/home/looks')) return 3;
+    if (location.contains('/business/home/salon')) return 4;
+    if (location.contains('/business/home/stats')) return 5;
     return 0; // agenda (default)
   }
 
@@ -78,6 +80,10 @@ class BusinessShell extends StatelessWidget {
               case 2:
                 context.go('/business/home/services');
               case 3:
+                context.go('/business/home/looks');
+              case 4:
+                context.go('/business/home/salon');
+              case 5:
                 context.go('/business/home/stats');
             }
           },
@@ -98,8 +104,16 @@ class BusinessShell extends StatelessWidget {
               label: 'Servicios',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.image),
+              label: 'Looks',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.store),
+              label: 'Mi Salón',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.bar_chart),
-              label: 'Estadisticas',
+              label: 'Estadísticas',
             ),
           ],
         ),

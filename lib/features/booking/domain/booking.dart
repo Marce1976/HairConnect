@@ -9,6 +9,10 @@ class Booking {
   final String time;
   final String stylist;
   final String status;
+  final String? lookId;
+  final String? salonName;
+  final List<String>? services;
+  final String? price;
   final DateTime? createdAt;
 
   const Booking({
@@ -20,6 +24,10 @@ class Booking {
     required this.time,
     required this.stylist,
     required this.status,
+    this.lookId,
+    this.salonName,
+    this.services,
+    this.price,
     this.createdAt,
   });
 
@@ -33,6 +41,12 @@ class Booking {
       time: map['time'] as String? ?? '',
       stylist: map['stylist'] as String? ?? '',
       status: map['status'] as String? ?? 'pending',
+      lookId: map['lookId'] as String?,
+      salonName: map['salonName'] as String?,
+      services: map['services'] != null
+          ? List<String>.from(map['services'] as List)
+          : null,
+      price: map['price'] as String?,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -46,6 +60,10 @@ class Booking {
       'time': time,
       'stylist': stylist,
       'status': status,
+      'lookId': lookId,
+      'salonName': salonName,
+      'services': services,
+      'price': price,
       'createdAt': createdAt != null
           ? Timestamp.fromDate(createdAt!)
           : FieldValue.serverTimestamp(),

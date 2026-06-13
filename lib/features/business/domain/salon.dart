@@ -4,6 +4,7 @@ class Salon {
   final String id;
   final String name;
   final String address;
+  final String? city;
   final String? phone;
   final String? description;
   final double? rating;
@@ -15,6 +16,7 @@ class Salon {
     required this.id,
     required this.name,
     required this.address,
+    this.city,
     this.phone,
     this.description,
     this.rating,
@@ -28,6 +30,7 @@ class Salon {
       id: id,
       name: map['name'] as String? ?? '',
       address: map['address'] as String? ?? '',
+      city: map['city'] as String?,
       phone: map['phone'] as String?,
       description: map['description'] as String?,
       rating: (map['rating'] as num?)?.toDouble(),
@@ -42,11 +45,12 @@ class Salon {
   Map<String, dynamic> toMap() => {
         'name': name,
         'address': address,
-        'phone': phone,
-        'description': description,
-        'rating': rating,
-        'galleryImages': galleryImages,
-        'location': location,
+        '?city': city,
+        '?phone': phone,
+        '?description': description,
+        '?rating': rating,
+        '?galleryImages': galleryImages,
+        '?location': location,
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),

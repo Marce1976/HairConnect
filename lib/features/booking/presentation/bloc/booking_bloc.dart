@@ -6,6 +6,7 @@ import 'package:hair_connect/features/booking/data/booking_service.dart';
 import 'package:hair_connect/features/booking/domain/booking.dart';
 import 'package:hair_connect/features/business/data/business_repository.dart';
 import 'package:hair_connect/core/di/service_locator.dart';
+import 'package:hair_connect/core/services/notification_service.dart';
 
 part 'booking_event.dart';
 part 'booking_state.dart';
@@ -27,6 +28,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
     on<SelectDate>(_onSelectDate);
     on<SelectTime>(_onSelectTime);
     on<ConfirmBooking>(_onConfirmBooking);
+    on<ConfirmLookBooking>(_onConfirmLookBooking);
     on<CancelBooking>(_onCancelBooking);
     on<LoadBookingHistory>(_onLoadBookingHistory);
   }
@@ -123,9 +125,54 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
         time: currentState.selectedTime!,
         stylist: currentState.selectedStylist!,
         businessId: _defaultBusinessId,
+        lookId: event.lookId,
       );
       if (success) {
         emit(BookingConfirmed());
+      } else {
+        emit(BookingError('Error al confirmar la reserva. Inténtalo de nuevo.'));
+      }
+    } catch (e) {
+      emit(BookingError('Error inesperado: $e'));
+    }
+  }
+
+  Future<void> _onConfirmLookBooking(
+    ConfirmLookBooking event,
+    Emitter<BookingState> emit,
+  ) async {
+    emit(BookingLoading());
+    try {
+      final success = await _bookingService.saveBooking(
+        service: event.services.join(', '),
+        date: event.date,
+        time: event.time,
+        stylist: event.stylistName,
+        businessId: _defaultBusinessId,
+        lookId: event.lookId,
+        salonName: event.salonName,
+        services: event.services,
+        price: event.price,
+        status: 'confirmed',
+      );
+      if (success) {
+        // Notificación in-app
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final notificationService = sl<NotificationService>();
+          await notificationService.sendNotification(
+            userId: user.uid,
+            title: 'Reserva confirmada',
+            message: 'Tu cita en ${event.salonName} con ${event.stylistName} el ${event.date} a las ${event.time} ha sido confirmada.',
+          );
+        }
+        emit(BookingLookConfirmed(
+          salonName: event.salonName,
+          stylistName: event.stylistName,
+          date: event.date,
+          time: event.time,
+          price: event.price,
+        ));
       } else {
         emit(BookingError('Error al confirmar la reserva. Inténtalo de nuevo.'));
       }

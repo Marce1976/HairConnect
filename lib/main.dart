@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hair_connect/core/theme/app_theme.dart';
 import 'package:hair_connect/core/routes/app_router.dart';
 import 'package:hair_connect/core/di/service_locator.dart';
+import 'package:hair_connect/core/services/fcm_service.dart';
 import 'package:hair_connect/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hair_connect/firebase_options.dart';
@@ -13,6 +14,9 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await initDependencies();
+
+  // Inicializar FCM para notificaciones push
+  await sl<FcmService>().init();
   runApp(
     MultiBlocProvider(
       providers: [

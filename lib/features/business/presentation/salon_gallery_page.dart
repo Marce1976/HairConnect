@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hair_connect/core/di/service_locator.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
-import 'package:hair_connect/core/services/storage_service.dart';
 import 'package:hair_connect/features/business/data/business_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -16,7 +15,6 @@ class SalonGalleryPage extends StatefulWidget {
 
 class _SalonGalleryPageState extends State<SalonGalleryPage> {
   final BusinessRepository _repository = sl<BusinessRepository>();
-  final StorageService _storageService = sl<StorageService>();
 
   Future<DocumentSnapshot>? _salonFuture;
 
@@ -32,23 +30,93 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
     });
   }
 
-  Future<void> _addImage() async {
-    try {
-      final url = await _storageService.uploadImage(
-        salonId: widget.salonId,
-        fileName: DateTime.now().millisecondsSinceEpoch.toString(),
-      );
-      if (url != null) {
-        await _repository.addGalleryImage(widget.salonId, url);
-        _refreshSalon();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al añadir imagen')),
-        );
-      }
-    }
+  /// Muestra un diálogo para agregar imagen por URL
+  void _showAddUrlDialog() {
+    final urlController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        title: const Text('Agregar imagen'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Pega la URL de una imagen:',
+              style: TextStyle(color: AppColors.textGrey, fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: urlController,
+              decoration: const InputDecoration(
+                hintText: 'https://ejemplo.com/foto.jpg',
+                border: OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                            ),
+                prefixIcon: Icon(Icons.link),
+              ),
+              keyboardType: TextInputType.url,
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            // Preview en vivo
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: urlController,
+              builder: (context, value, _) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    height: 120,
+                    width: double.infinity,
+                    child: Image.network(
+                      value.text,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        color: Colors.red.withValues(alpha: 0.05),
+                        child: const Center(
+                          child: Text('URL no válida',
+                              style: TextStyle(color: Colors.red)),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final url = urlController.text.trim();
+              if (url.isEmpty) return;
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await _repository.addGalleryImage(widget.salonId, url);
+                if (ctx.mounted) Navigator.pop(ctx);
+                _refreshSalon();
+              } catch (e) {
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('Error al agregar imagen')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Agregar'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _deleteImage(String imageUrl) async {
@@ -73,7 +141,6 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
 
     if (confirmed == true) {
       try {
-        await _storageService.deleteImage(imageUrl);
         await _repository.removeGalleryImage(widget.salonId, imageUrl);
         _refreshSalon();
       } catch (e) {
@@ -89,11 +156,15 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Galería del Salón')),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        onPressed: _addImage,
-        child: const Icon(Icons.add, color: Colors.white),
+      appBar: AppBar(
+        title: const Text('Galería del Salón'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_photo_alternate),
+            tooltip: 'Agregar imagen por URL',
+            onPressed: _showAddUrlDialog,
+          ),
+        ],
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: _salonFuture,
@@ -117,10 +188,31 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
               : <String>[];
 
           if (galleryImages.isEmpty) {
-            return const Center(
-              child: Text(
-                'No hay imágenes en la galería',
-                style: TextStyle(color: AppColors.textGrey),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.photo_library_outlined,
+                      size: 64, color: AppColors.textGrey),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No hay imágenes en la galería',
+                    style: TextStyle(color: AppColors.textGrey, fontSize: 16),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: _showAddUrlDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Agregar primera imagen'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           }
@@ -139,14 +231,19 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.network(
-                      galleryImages[index],
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        child: const Icon(Icons.broken_image, size: 32),
+                    // Imagen — tocar para ver en grande
+                    GestureDetector(
+                      onTap: () => _showFullImage(context, galleryImages[index]),
+                      child: Image.network(
+                        galleryImages[index],
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          child: const Icon(Icons.broken_image, size: 32),
+                        ),
                       ),
                     ),
+                    // Botón eliminar
                     Positioned(
                       top: 4,
                       right: 4,
@@ -172,6 +269,37 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
             },
           );
         },
+      ),
+    );
+  }
+
+  /// Muestra la imagen a pantalla completa
+  void _showFullImage(BuildContext context, String imageUrl) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (_, _, _) => Scaffold(
+          backgroundColor: Colors.black.withValues(alpha: 0.95),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            title: const Text('Galería'),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) => const Icon(
+                  Icons.broken_image,
+                  color: Colors.white54,
+                  size: 64,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

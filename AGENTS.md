@@ -31,3 +31,6 @@
 - flutter pub get
 - flutter analyze
 - flutter test
+
+## Reglas de IA
+- Para instrucciones específicas sobre qué modelo usar, lee siempre el archivo `abacus.md`.

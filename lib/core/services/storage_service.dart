@@ -29,19 +29,33 @@ class StorageService {
 
       if (image == null) return null;
 
-      final ref = _storage
-          .ref()
-          .child('salons')
-          .child(salonId)
-          .child('gallery')
-          .child('$fileName.jpg');
-
-      await ref.putFile(File(image.path));
-      return await ref.getDownloadURL();
+      return uploadFromFile(
+        filePath: image.path,
+        salonId: salonId,
+        fileName: fileName,
+      );
     } catch (e) {
       debugPrint('Error al subir imagen: $e');
       return null;
     }
+  }
+
+  /// Sube una imagen ya seleccionada (por su ruta) a Firebase Storage.
+  /// Lanza una excepción con el detalle si falla.
+  Future<String> uploadFromFile({
+    required String filePath,
+    required String salonId,
+    required String fileName,
+  }) async {
+    final ref = _storage
+        .ref()
+        .child('salons')
+        .child(salonId)
+        .child('gallery')
+        .child('$fileName.jpg');
+
+    await ref.putFile(File(filePath));
+    return await ref.getDownloadURL();
   }
 
   Future<void> deleteImage(String url) async {

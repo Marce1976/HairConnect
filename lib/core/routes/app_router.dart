@@ -15,10 +15,16 @@ import 'package:hair_connect/features/business/presentation/agenda_page.dart';
 import 'package:hair_connect/features/business/presentation/stylists_page.dart';
 import 'package:hair_connect/features/business/presentation/services_page.dart';
 import 'package:hair_connect/features/business/presentation/stats_page.dart';
+import 'package:hair_connect/features/business/presentation/business_looks_page.dart';
 import 'package:hair_connect/features/business/presentation/salon_search_page.dart';
 import 'package:hair_connect/features/business/presentation/salon_detail_page.dart';
 import 'package:hair_connect/features/business/presentation/lookbook_page.dart';
+import 'package:hair_connect/features/business/presentation/look_detail_page.dart';
+import 'package:hair_connect/features/business/presentation/favorites_page.dart';
+import 'package:hair_connect/features/business/presentation/upload_look_page.dart';
+import 'package:hair_connect/features/business/presentation/seed_data_page.dart';
 import 'package:hair_connect/features/business/presentation/salon_gallery_page.dart';
+import 'package:hair_connect/features/business/presentation/salon_edit_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -69,6 +75,14 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const ServicesPage(),
         ),
         GoRoute(
+          path: '/business/home/looks',
+          builder: (context, state) => const BusinessLooksPage(),
+        ),
+        GoRoute(
+          path: '/business/home/salon',
+          builder: (context, state) => const SalonEditPage(),
+        ),
+        GoRoute(
           path: '/business/home/stats',
           builder: (context, state) => const StatsPage(),
         ),
@@ -76,10 +90,13 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/booking',
-      builder: (context, state) => BlocProvider(
-        create: (_) => sl<BookingBloc>(),
-        child: const BookingPage(),
-      ),
+      builder: (context, state) {
+        final lookId = state.uri.queryParameters['lookId'];
+        return BlocProvider(
+          create: (_) => sl<BookingBloc>(),
+          child: BookingPage(lookId: lookId),
+        );
+      },
     ),
     GoRoute(
       path: '/booking/history',
@@ -106,6 +123,25 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/lookbook',
       builder: (context, state) => const LookBookPage(),
+    ),
+    GoRoute(
+      path: '/lookbook/:lookId',
+      builder: (context, state) {
+        final lookId = state.pathParameters['lookId']!;
+        return LookDetailPage(lookId: lookId);
+      },
+    ),
+    GoRoute(
+      path: '/favorites',
+      builder: (context, state) => const FavoritesPage(),
+    ),
+    GoRoute(
+      path: '/upload-look',
+      builder: (context, state) => const UploadLookPage(),
+    ),
+    GoRoute(
+      path: '/seed',
+      builder: (context, state) => const SeedDataPage(),
     ),
     GoRoute(
       path: '/salons/:salonId/gallery',

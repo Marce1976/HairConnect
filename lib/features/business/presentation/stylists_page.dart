@@ -24,7 +24,9 @@ class _StylistsPageState extends State<StylistsPage> {
           controller: nameController,
           decoration: const InputDecoration(
             labelText: 'Nombre del Estilista',
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                        ),
           ),
         ),
         actions: [

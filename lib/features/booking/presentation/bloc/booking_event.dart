@@ -29,7 +29,33 @@ final class SelectTime extends BookingEvent {
   SelectTime(this.time);
 }
 
-final class ConfirmBooking extends BookingEvent {}
+final class ConfirmBooking extends BookingEvent {
+  final String? lookId;
+
+  ConfirmBooking({this.lookId});
+}
+
+final class ConfirmLookBooking extends BookingEvent {
+  final String lookId;
+  final String salonId;
+  final String salonName;
+  final String stylistName;
+  final List<String> services;
+  final String price;
+  final String date;
+  final String time;
+
+  ConfirmLookBooking({
+    required this.lookId,
+    required this.salonId,
+    required this.salonName,
+    required this.stylistName,
+    required this.services,
+    required this.price,
+    required this.date,
+    required this.time,
+  });
+}
 
 final class CancelBooking extends BookingEvent {
   final String bookingId;

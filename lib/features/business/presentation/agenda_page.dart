@@ -18,7 +18,7 @@ class _AgendaPageState extends State<AgendaPage> {
   DateTime _selectedDay = DateTime.now();
   DateTime _focusedDay = DateTime.now();
 
-  /// Parses a date string in "dd/mm/aaaa" format into a [DateTime].
+  /// Parsea una fecha en formato "dd/mm/aaaa".
   DateTime? _parseDate(String dateStr) {
     try {
       final parts = dateStr.split('/');
@@ -32,8 +32,7 @@ class _AgendaPageState extends State<AgendaPage> {
     return null;
   }
 
-  /// Groups booking documents by their normalized date, preserving the
-  /// document id so it can be used later in status update dialogs.
+  /// Agrupa reservas por fecha normalizada.
   Map<DateTime, List<MapEntry<String, Map<String, dynamic>>>>
       _groupBookingsByDate(List<QueryDocumentSnapshot> docs) {
     final map = <DateTime,
@@ -51,7 +50,7 @@ class _AgendaPageState extends State<AgendaPage> {
     return map;
   }
 
-  /// Returns the list of (docId, data) entries for the given day.
+  /// Devuelve las reservas para un día concreto.
   List<MapEntry<String, Map<String, dynamic>>> _getBookingsForDay(
     DateTime day,
     Map<DateTime, List<MapEntry<String, Map<String, dynamic>>>>
@@ -68,45 +67,51 @@ class _AgendaPageState extends State<AgendaPage> {
   ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         title: const Text('Actualizar Estado'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              title: const Text('Confirmada'),
-              leading: const Icon(Icons.check_circle, color: Colors.green),
+            _StatusOption(
+              icon: Icons.check_circle,
+              color: Colors.green,
+              label: 'Confirmada',
               onTap: () async {
                 await _repository.updateBookingStatus(
                   bookingId: bookingId,
                   status: 'confirmed',
                   userId: booking['userId'] ?? '',
                 );
-                if (context.mounted) Navigator.pop(context);
+                if (ctx.mounted) Navigator.pop(ctx);
               },
             ),
-            ListTile(
-              title: const Text('Pendiente'),
-              leading: const Icon(Icons.pending, color: Colors.orange),
+            _StatusOption(
+              icon: Icons.schedule,
+              color: Colors.orange,
+              label: 'Pendiente',
               onTap: () async {
                 await _repository.updateBookingStatus(
                   bookingId: bookingId,
                   status: 'pending',
                   userId: booking['userId'] ?? '',
                 );
-                if (context.mounted) Navigator.pop(context);
+                if (ctx.mounted) Navigator.pop(ctx);
               },
             ),
-            ListTile(
-              title: const Text('Cancelada'),
-              leading: const Icon(Icons.cancel, color: Colors.red),
+            _StatusOption(
+              icon: Icons.cancel,
+              color: Colors.red,
+              label: 'Cancelada',
               onTap: () async {
                 await _repository.updateBookingStatus(
                   bookingId: bookingId,
                   status: 'canceled',
                   userId: booking['userId'] ?? '',
                 );
-                if (context.mounted) Navigator.pop(context);
+                if (ctx.mounted) Navigator.pop(ctx);
               },
             ),
           ],
@@ -128,6 +133,19 @@ class _AgendaPageState extends State<AgendaPage> {
     }
   }
 
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'confirmed':
+        return 'Confirmada';
+      case 'pending':
+        return 'Pendiente';
+      case 'canceled':
+        return 'Cancelada';
+      default:
+        return status;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
@@ -137,7 +155,31 @@ class _AgendaPageState extends State<AgendaPage> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return const Center(child: Text('Error al cargar la agenda'));
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline,
+                      size: 48, color: AppColors.textGrey),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Error al cargar la agenda',
+                    style:
+                        TextStyle(fontSize: 16, color: AppColors.textDark),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${snapshot.error}',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textGrey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
         }
 
         final bookingsByDate =
@@ -149,122 +191,232 @@ class _AgendaPageState extends State<AgendaPage> {
         final dayBookings =
             _getBookingsForDay(_selectedDay, bookingsByDate);
 
+        final todayStr =
+            '${_selectedDay.day}/${_selectedDay.month}/${_selectedDay.year}';
+        final isToday = _selectedDay.day == DateTime.now().day &&
+            _selectedDay.month == DateTime.now().month &&
+            _selectedDay.year == DateTime.now().year;
+
         return Column(
           children: [
-            // ── Calendario visual ──────────────────────────────────
-            TableCalendar<MapEntry<String, Map<String, dynamic>>>(
-              firstDay:
-                  DateTime.now().subtract(const Duration(days: 30)),
-              lastDay:
-                  DateTime.now().add(const Duration(days: 365)),
-              focusedDay: _focusedDay,
-              calendarFormat: _format,
-              startingDayOfWeek: StartingDayOfWeek.monday,
-              selectedDayPredicate: (day) =>
-                  isSameDay(_selectedDay, day),
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
+            // ── Calendario ──
+            Card(
+              margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+              elevation: 2,
+              shadowColor: Colors.black26,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: TableCalendar<MapEntry<String, Map<String, dynamic>>>(
+                firstDay:
+                    DateTime.now().subtract(const Duration(days: 30)),
+                lastDay: DateTime.now().add(const Duration(days: 365)),
+                focusedDay: _focusedDay,
+                calendarFormat: _format,
+                startingDayOfWeek: StartingDayOfWeek.monday,
+                selectedDayPredicate: (day) =>
+                    isSameDay(_selectedDay, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                },
+                onFormatChanged: (format) {
+                  setState(() => _format = format);
+                },
+                onPageChanged: (focusedDay) {
                   _focusedDay = focusedDay;
-                });
-              },
-              onFormatChanged: (format) {
-                setState(() => _format = format);
-              },
-              onPageChanged: (focusedDay) {
-                _focusedDay = focusedDay;
-              },
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: true,
-                titleCentered: true,
-              ),
-              calendarStyle: CalendarStyle(
-                selectedDecoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
+                },
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: true,
+                  titleCentered: true,
+                  formatButtonDecoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
+                  formatButtonTextStyle: TextStyle(color: Colors.white),
                 ),
-                todayDecoration: const BoxDecoration(
-                  color: AppColors.gold,
-                  shape: BoxShape.circle,
+                calendarStyle: CalendarStyle(
+                  selectedDecoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  todayDecoration: const BoxDecoration(
+                    color: AppColors.gold,
+                    shape: BoxShape.circle,
+                  ),
+                  markerDecoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
                 ),
+                eventLoader: (day) {
+                  final normalized =
+                      DateTime(day.year, day.month, day.day);
+                  return bookingsByDate[normalized] ?? [];
+                },
               ),
-              eventLoader: (day) {
-                final normalized =
-                    DateTime(day.year, day.month, day.day);
-                return bookingsByDate[normalized] ?? [];
-              },
             ),
-            const Divider(height: 1),
-            // ── Lista de reservas del día seleccionado ────────────
+            const SizedBox(height: 8),
+
+            // ── Cabecera del día ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today,
+                      size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    isToday ? 'Hoy' : todayStr,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${dayBookings.length} reserva${dayBookings.length == 1 ? '' : 's'}',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // ── Lista de reservas ──
             Expanded(
               child: dayBookings.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No hay reservas para este día',
-                        style: TextStyle(color: AppColors.textGrey),
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.event_busy,
+                              size: 48, color: AppColors.textGrey.withValues(alpha: 0.5)),
+                          const SizedBox(height: 12),
+                          Text(
+                            isToday
+                                ? 'No hay reservas para hoy'
+                                : 'No hay reservas para este día',
+                            style: const TextStyle(color: AppColors.textGrey),
+                          ),
+                        ],
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       itemCount: dayBookings.length,
                       itemBuilder: (context, index) {
                         final entry = dayBookings[index];
                         final bookingId = entry.key;
                         final booking = entry.value;
-                        return GestureDetector(
-                          onTap: () =>
-                              _showStatusUpdateDialog(
-                                bookingId,
-                                booking['status'] ?? 'pending',
-                                booking,
-                              ),
-                          child: Card(
-                            margin:
-                                const EdgeInsets.only(bottom: 12.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(12.0),
+                        final status = booking['status'] ?? 'pending';
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          elevation: 1,
+                          shadowColor: Colors.black26,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: () => _showStatusUpdateDialog(
+                              bookingId,
+                              status,
+                              booking,
                             ),
-                            child: ListTile(
-                              leading: const CircleAvatar(
-                                backgroundColor: AppColors.primary,
-                                child: Icon(Icons.person,
-                                    color: Colors.white, size: 20),
-                              ),
-                              title: Text(
-                                booking['service'] ?? '',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                '${booking['date'] ?? ''} a las ${booking['time'] ?? ''}'
-                                '${booking['stylist'] != null ? ' con ${booking['stylist']}' : ''}',
-                                style: const TextStyle(
-                                    color: AppColors.textGrey),
-                              ),
-                              trailing: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(
-                                  horizontal: 8.0,
-                                  vertical: 4.0,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _getStatusColor(
-                                    booking['status'] ?? 'pending',
-                                  ).withValues(alpha: 0.1),
-                                  borderRadius:
-                                      BorderRadius.circular(8.0),
-                                ),
-                                child: Text(
-                                  booking['status'] ?? 'Pendiente',
-                                  style: TextStyle(
-                                    color: _getStatusColor(
-                                        booking['status'] ??
-                                            'pending'),
-                                    fontSize: 12.0,
-                                    fontWeight: FontWeight.bold,
+                            child: Padding(
+                              padding: const EdgeInsets.all(14),
+                              child: Row(
+                                children: [
+                                  // Avatar con hora
+                                  CircleAvatar(
+                                    backgroundColor: _getStatusColor(status)
+                                        .withValues(alpha: 0.15),
+                                    radius: 26,
+                                    child: Text(
+                                      booking['time'] ?? '--',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: _getStatusColor(status),
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(width: 14),
+                                  // Info
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          booking['service'] ?? '',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        if (booking['stylist'] != null)
+                                          Text(
+                                            '${booking['stylist']}',
+                                            style: const TextStyle(
+                                              color: AppColors.textGrey,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        if (booking['salonName'] != null &&
+                                            (booking['salonName'] as String)
+                                                .isNotEmpty)
+                                          Text(
+                                            booking['salonName'],
+                                            style: const TextStyle(
+                                              color: AppColors.textGrey,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Badge de estado
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(status)
+                                          .withValues(alpha: 0.1),
+                                      borderRadius:
+                                          BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _statusLabel(status),
+                                      style: TextStyle(
+                                        color: _getStatusColor(status),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -275,6 +427,47 @@ class _AgendaPageState extends State<AgendaPage> {
           ],
         );
       },
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Opción de estado en el diálogo de actualización
+// ──────────────────────────────────────────────────────────────
+class _StatusOption extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final VoidCallback onTap;
+
+  const _StatusOption({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: color.withValues(alpha: 0.3)),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: color, size: 28),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        trailing: const Icon(Icons.chevron_right, size: 20),
+        onTap: onTap,
+      ),
     );
   }
 }
