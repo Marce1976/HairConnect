@@ -12,6 +12,11 @@ class Salon {
   final GeoPoint? location;
   final String? ownerId;
   final DateTime? createdAt;
+  final String? photoUrl;
+  final String? instagram;
+  final String? facebook;
+  final String? website;
+  final String? schedule;
 
   const Salon({
     required this.id,
@@ -25,6 +30,11 @@ class Salon {
     this.location,
     this.ownerId,
     this.createdAt,
+    this.photoUrl,
+    this.instagram,
+    this.facebook,
+    this.website,
+    this.schedule,
   });
 
   factory Salon.fromMap(String id, Map<String, dynamic> map) {
@@ -42,19 +52,29 @@ class Salon {
       location: map['location'] as GeoPoint?,
       ownerId: map['ownerId'] as String?,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
+      photoUrl: map['photoUrl'] as String?,
+      instagram: map['instagram'] as String?,
+      facebook: map['facebook'] as String?,
+      website: map['website'] as String?,
+      schedule: map['schedule'] as String?,
     );
   }
 
   Map<String, dynamic> toMap() => {
         'name': name,
         'address': address,
-        '?city': city,
-        '?phone': phone,
-        '?description': description,
-        '?rating': rating,
-        '?galleryImages': galleryImages,
-        '?location': location,
-        '?ownerId': ownerId,
+        'city': city,
+        'phone': phone,
+        'description': description,
+        'rating': rating,
+        'galleryImages': galleryImages,
+        'location': location,
+        'ownerId': ownerId,
+        'photoUrl': photoUrl,
+        'instagram': instagram,
+        'facebook': facebook,
+        'website': website,
+        'schedule': schedule,
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)
             : FieldValue.serverTimestamp(),

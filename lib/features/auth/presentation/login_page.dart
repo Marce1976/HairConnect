@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginPage extends StatefulWidget {
   final bool isClient;
@@ -15,6 +18,17 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _rememberMe = false;
+  bool _isFaceIdAvailable = false;
+  bool _isFingerprint = false;
+  final _secureStorage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedEmail();
+    _checkBiometrics();
+  }
 
   @override
   void dispose() {
@@ -23,7 +37,111 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _loadSavedEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('remembered_email');
+      if (email != null && email.isNotEmpty) {
+        _emailController.text = email;
+        setState(() => _rememberMe = true);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveOrRemoveEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_rememberMe && _emailController.text.trim().isNotEmpty) {
+        await prefs.setString('remembered_email', _emailController.text.trim());
+      } else {
+        await prefs.remove('remembered_email');
+        await _removeCredentials();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveCredentials(String email, String password) async {
+    try {
+      await _secureStorage.write(key: 'auth_email', value: email);
+      await _secureStorage.write(key: 'auth_password', value: password);
+    } catch (_) {}
+  }
+
+  Future<void> _removeCredentials() async {
+    try {
+      await _secureStorage.delete(key: 'auth_email');
+      await _secureStorage.delete(key: 'auth_password');
+    } catch (_) {}
+  }
+
+  Future<Map<String, String?>> _getCredentials() async {
+    try {
+      final email = await _secureStorage.read(key: 'auth_email');
+      final password = await _secureStorage.read(key: 'auth_password');
+      return {'email': email, 'password': password};
+    } catch (_) {
+      return {'email': null, 'password': null};
+    }
+  }
+
+  Future<void> _checkBiometrics() async {
+    try {
+      final auth = LocalAuthentication();
+      final canCheck = await auth.canCheckBiometrics;
+      final isDevice = await auth.isDeviceSupported();
+      if (canCheck && isDevice) {
+        final available = await auth.getAvailableBiometrics();
+        final hasFace = available.any((b) =>
+            b == BiometricType.face);
+        setState(() {
+          _isFaceIdAvailable = true;
+          _isFingerprint = !hasFace;
+        });
+      } else {
+        setState(() => _isFaceIdAvailable = false);
+      }
+    } catch (_) {
+      setState(() => _isFaceIdAvailable = false);
+    }
+  }
+
+  Future<void> _loginWithBiometrics() async {
+    try {
+      final auth = LocalAuthentication();
+      final authenticated = await auth.authenticate(
+        localizedReason: 'Accede a HairConnect con tu huella o Face ID',
+      );
+      if (!authenticated || !mounted) return;
+      final creds = await _getCredentials();
+      final email = creds['email'];
+      final password = creds['password'];
+      if (email == null || email.isEmpty || password == null || password.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No hay credenciales guardadas. Inicia sesión primero.')),
+          );
+        }
+        return;
+      }
+      if (mounted) {
+        _emailController.text = email;
+        _passwordController.text = password;
+        context.read<AuthBloc>().add(LoginRequested(
+              email: email,
+              password: password,
+              isClient: widget.isClient,
+            ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error biométrico: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _login() async {
     if (_emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -31,11 +149,13 @@ class _LoginPageState extends State<LoginPage> {
       );
       return;
     }
-    context.read<AuthBloc>().add(LoginRequested(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-          isClient: widget.isClient,
-        ));
+    final bloc = context.read<AuthBloc>();
+    await _saveOrRemoveEmail();
+    bloc.add(LoginRequested(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      isClient: widget.isClient,
+    ));
   }
 
   @override
@@ -43,6 +163,12 @@ class _LoginPageState extends State<LoginPage> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthSuccess) {
+          if (_rememberMe) {
+            _saveCredentials(
+              _emailController.text.trim(),
+              _passwordController.text.trim(),
+            );
+          }
           context.go(state.isClient ? '/client/home' : '/business/home');
         } else if (state is AuthFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -58,10 +184,11 @@ class _LoginPageState extends State<LoginPage> {
               title: Text(widget.isClient ? 'Acceso Cliente' : 'Acceso Negocio'),
             ),
             body: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextFormField(
                       controller: _emailController,
@@ -88,7 +215,37 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       obscureText: true,
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _rememberMe,
+                          onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                          activeColor: AppColors.primary,
+                        ),
+                        const Text('Recordarme'),
+                      ],
+                    ),
+                    if (_isFaceIdAvailable && _rememberMe) ...[
+                      const SizedBox(height: 4),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: isLoading ? null : _loginWithBiometrics,
+                          icon: Icon(_isFingerprint ? Icons.fingerprint : Icons.face),
+                          label: Text(_isFingerprint ? 'Iniciar con Huella' : 'Iniciar con Face ID'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -154,7 +311,8 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-          );
+          ),
+        );
         },
       ),
     );

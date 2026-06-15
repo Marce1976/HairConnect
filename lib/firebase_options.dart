@@ -63,7 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '784154724919',
     projectId: 'hairconnect-70b13',
     storageBucket: 'hairconnect-70b13.firebasestorage.app',
-    iosBundleId: 'com.example.hairConnect',
+    iosBundleId: 'com.hairconnect.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -72,7 +72,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '784154724919',
     projectId: 'hairconnect-70b13',
     storageBucket: 'hairconnect-70b13.firebasestorage.app',
-    iosBundleId: 'com.example.hairConnect',
+    iosBundleId: 'com.hairconnect.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

@@ -180,16 +180,22 @@ class _LookDetailPageState extends State<LookDetailPage> {
         children: [
           GestureDetector(
             onTap: () => _showMediaViewer(look),
-            child: Image.network(
-              look.imageUrl,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              errorBuilder: (_, _, _) => Container(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                child: const Icon(
-                  Icons.broken_image,
-                  size: 64,
-                  color: AppColors.textGrey,
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+              child: Image.network(
+                look.imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                errorBuilder: (_, _, _) => Container(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  child: const Icon(
+                    Icons.broken_image,
+                    size: 64,
+                    color: AppColors.textGrey,
+                  ),
                 ),
               ),
             ),
@@ -257,43 +263,65 @@ class _LookDetailPageState extends State<LookDetailPage> {
     showDialog(
       context: context,
       barrierColor: Colors.black,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(8),
-        child: Stack(
-          children: [
-            InteractiveViewer(
-              minScale: 1.0,
-              maxScale: 5.0,
-              child: Center(
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) => const Icon(
-                    Icons.broken_image,
-                    size: 64,
-                    color: Colors.white54,
+      builder: (ctx) {
+        final size = MediaQuery.of(ctx).size;
+        return Container(
+          color: Colors.black,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: size.width - 32,
+              height: size.height - 32,
+              child: Stack(
+                children: [
+                  // Capa base: imagen con zoom
+                  Positioned.fill(
+                    child: InteractiveViewer(
+                      clipBehavior: Clip.none,
+                      minScale: 1.0,
+                      maxScale: 5.0,
+                      child: Center(
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const Icon(
+                            Icons.broken_image,
+                            size: 64,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  // Máscara que pinta las 4 esquinas de negro
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: _CornerOverlayPainter(radius: 40),
+                      ),
+                    ),
+                  ),
+                  // Botón cerrar
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(ctx).pop(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -770,7 +798,10 @@ class _VideoPlayerDialogState extends State<_VideoPlayerDialog> {
               Center(
                 child: AspectRatio(
                   aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: VideoPlayer(_controller),
+                  ),
                 ),
               ),
               Positioned(
@@ -891,4 +922,35 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
       ),
     );
   }
+}
+
+class _CornerOverlayPainter extends CustomPainter {
+  final double radius;
+
+  _CornerOverlayPainter({required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.black;
+
+    final fullRect = Path()..addRect(Offset.zero & size);
+    final innerRRect = Path()..addRRect(
+      RRect.fromRectAndRadius(
+        Offset.zero & size,
+        Radius.circular(radius),
+      ),
+    );
+
+    // fullRect - innerRRect = las 4 esquinas fuera del área redondeada
+    final corners = Path.combine(
+      PathOperation.difference,
+      fullRect,
+      innerRRect,
+    );
+
+    canvas.drawPath(corners, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CornerOverlayPainter old) => old.radius != radius;
 }

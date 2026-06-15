@@ -189,9 +189,19 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
                 ),
               ),
             ),
-             IconButton(
-              icon: const Icon(Icons.edit, color: AppColors.textGrey, size: 20),
-              onPressed: () => _showEditLookDialog(look),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: AppColors.textGrey, size: 20),
+                  onPressed: () => _showEditLookDialog(look),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline,
+                      color: Colors.red, size: 20),
+                  onPressed: () => _confirmDeleteLook(context, look),
+                ),
+              ],
             ),
           ],
         ),
@@ -366,5 +376,35 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
         ],
       ),
     );
+  }
+  
+  Future<void> _confirmDeleteLook(BuildContext context, Look look) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar look'),
+        content: Text('¿Estás seguro de eliminar "${look.salonName}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _lookRepository.deleteLook(look.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Look eliminado')),
+        );
+      }
+    }
   }
 }

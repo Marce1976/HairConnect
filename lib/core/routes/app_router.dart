@@ -7,10 +7,13 @@ import 'package:hair_connect/features/auth/presentation/login_page.dart';
 import 'package:hair_connect/features/auth/presentation/register_page.dart';
 import 'package:hair_connect/features/home/presentation/client_home_page.dart';
 import 'package:hair_connect/features/home/presentation/business_home_page.dart';
+import 'package:hair_connect/features/home/presentation/business_dashboard_page.dart';
 import 'package:hair_connect/features/booking/presentation/booking_page.dart';
 import 'package:hair_connect/features/booking/presentation/booking_history_page.dart';
 import 'package:hair_connect/features/booking/presentation/my_booking_page.dart';
+import 'package:hair_connect/features/booking/presentation/my_bookings_page.dart';
 import 'package:hair_connect/features/booking/presentation/bloc/booking_bloc.dart';
+import 'package:hair_connect/features/client/presentation/client_profile_page.dart';
 import 'package:hair_connect/features/notifications/notifications_page.dart';
 import 'package:hair_connect/features/business/presentation/agenda_page.dart';
 import 'package:hair_connect/features/business/presentation/stylists_page.dart';
@@ -60,11 +63,15 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/business/home',
-      redirect: (context, state) => '/business/home/agenda',
+      redirect: (context, state) => '/business/home/dashboard',
     ),
     ShellRoute(
       builder: (context, state, child) => BusinessShell(child: child),
       routes: [
+        GoRoute(
+          path: '/business/home/dashboard',
+          builder: (context, state) => const BusinessDashboardPage(),
+        ),
         GoRoute(
           path: '/business/home/agenda',
           builder: (context, state) => const AgendaPage(),
@@ -115,14 +122,19 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/booking/history',
-      builder: (context, state) => BlocProvider(
-        create: (_) => sl<BookingBloc>(),
-        child: const BookingHistoryPage(),
-      ),
+      builder: (context, state) => const BookingHistoryPage(),
     ),
     GoRoute(
       path: '/my-booking',
       builder: (context, state) => const MyBookingPage(),
+    ),
+    GoRoute(
+      path: '/my-bookings',
+      builder: (context, state) => const MyBookingsPage(),
+    ),
+    GoRoute(
+      path: '/client/profile',
+      builder: (context, state) => const ClientProfilePage(),
     ),
     GoRoute(
       path: '/notifications',

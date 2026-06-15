@@ -12,47 +12,75 @@ class MyBookingPage extends StatefulWidget {
 }
 
 class _MyBookingPageState extends State<MyBookingPage> {
-  void _showCancelDialog(String bookingId, String businessId) {
+  bool _isCancelling = false;
+
+  Future<void> _cancelBooking(String bookingId) async {
+    setState(() => _isCancelling = true);
+    try {
+      // Usar set con merge: más robusto que update (crea el campo si no existe)
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(bookingId)
+          .set({'status': 'canceled'}, SetOptions(merge: true));
+
+      if (!mounted) return;
+
+      // Leer el documento para verificar que el cambio se aplicó
+      final doc = await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(bookingId)
+          .get();
+      if (!mounted) return;
+      final status = doc.data()?['status'] as String?;
+
+      if (status == 'canceled') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Reserva cancelada exitosamente.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Error: el estado sigue siendo "$status". Inténtalo de nuevo.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cancelar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isCancelling = false);
+    }
+  }
+
+  void _showCancelDialog(String bookingId) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('Cancelar Reserva'),
         content: const Text(
           '¿Estás seguro de que deseas cancelar esta reserva?',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('No'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              try {
-                await FirebaseFirestore.instance
-                    .collection('bookings')
-                    .doc(bookingId)
-                    .update({'status': 'canceled'});
-                if (context.mounted) Navigator.pop(context);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Reserva cancelada exitosamente.'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) Navigator.pop(context);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error al cancelar: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
+            onPressed: () {
+              Navigator.pop(ctx);
+              _cancelBooking(bookingId);
             },
             child: const Text('Sí, cancelar'),
           ),
@@ -99,7 +127,6 @@ class _MyBookingPageState extends State<MyBookingPage> {
     }
   }
 
-  /// Comprueba si la fecha de la reserva (formato dd/mm/yyyy) es hoy o futura.
   bool _isDateTodayOrFuture(String dateStr) {
     try {
       final parts = dateStr.split('/');
@@ -140,8 +167,8 @@ class _MyBookingPageState extends State<MyBookingPage> {
             );
           }
 
-          // Buscar la próxima cita activa (no cancelada, con fecha hoy o futura)
-          final activeBookings = snapshot.data?.docs.where((doc) {
+          // Filtrar: activas = futuras y no canceladas
+          final activeBookings = (snapshot.data?.docs ?? []).where((doc) {
             final data = doc.data() as Map<String, dynamic>;
             final status = data['status'] as String? ?? '';
             if (status == 'canceled') return false;
@@ -149,18 +176,15 @@ class _MyBookingPageState extends State<MyBookingPage> {
             return _isDateTodayOrFuture(date);
           }).toList();
 
-          if (activeBookings == null || activeBookings.isEmpty) {
+          if (activeBookings.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.event_busy,
-                      size: 80,
-                      color: AppColors.textGrey,
-                    ),
+                    const Icon(Icons.event_busy,
+                        size: 80, color: AppColors.textGrey),
                     const SizedBox(height: 24),
                     const Text(
                       'No tienes citas próximas',
@@ -173,7 +197,8 @@ class _MyBookingPageState extends State<MyBookingPage> {
                     const SizedBox(height: 8),
                     const Text(
                       'Explora looks y reserva tu primera cita',
-                      style: TextStyle(color: AppColors.textGrey, fontSize: 14),
+                      style: TextStyle(
+                          color: AppColors.textGrey, fontSize: 14),
                     ),
                     const SizedBox(height: 32),
                     SizedBox(
@@ -202,10 +227,8 @@ class _MyBookingPageState extends State<MyBookingPage> {
             final bData = b.data() as Map<String, dynamic>;
             final aDateStr = aData['date'] as String? ?? '';
             final bDateStr = bData['date'] as String? ?? '';
-            // Simple string comparison works for dd/mm/yyyy format
-            final aParts = aDateStr.split('/').reversed.join();
-            final bParts = bDateStr.split('/').reversed.join();
-            return aParts.compareTo(bParts);
+            return aDateStr.split('/').reversed.join().compareTo(
+                bDateStr.split('/').reversed.join());
           });
 
           final booking = activeBookings.first;
@@ -224,10 +247,12 @@ class _MyBookingPageState extends State<MyBookingPage> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(status).withValues(alpha: 0.1),
+                      color:
+                          _getStatusColor(status).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: _getStatusColor(status).withValues(alpha: 0.3),
+                        color: _getStatusColor(status)
+                            .withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
@@ -274,8 +299,8 @@ class _MyBookingPageState extends State<MyBookingPage> {
                             ),
                           ),
                         ],
-                        _detailRow(
-                            Icons.person, 'Con ${data['stylist'] ?? '—'}'),
+                        _detailRow(Icons.person,
+                            'Con ${data['stylist'] ?? '—'}'),
                         const SizedBox(height: 16),
                         _detailRow(
                             Icons.calendar_today, data['date'] ?? ''),
@@ -312,14 +337,23 @@ class _MyBookingPageState extends State<MyBookingPage> {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _showCancelDialog(
-                        booking.id,
-                        data['businessId'] ?? '',
-                      ),
-                      icon: const Icon(Icons.cancel, color: Colors.red),
-                      label: const Text(
-                        'Cancelar reserva',
-                        style: TextStyle(color: Colors.red),
+                      onPressed: _isCancelling
+                          ? null
+                          : () =>
+                              _showCancelDialog(booking.id),
+                      icon: _isCancelling
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2),
+                            )
+                          : const Icon(Icons.cancel, color: Colors.red),
+                      label: Text(
+                        _isCancelling
+                            ? 'Cancelando...'
+                            : 'Cancelar reserva',
+                        style: const TextStyle(color: Colors.red),
                       ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.red),

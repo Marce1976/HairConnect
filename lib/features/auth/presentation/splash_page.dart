@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
@@ -60,10 +62,39 @@ class _SplashPageState extends State<SplashPage>
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (!mounted) return;
+    _checkAuthAndNavigate();
+  }
+
+  Future<void> _checkAuthAndNavigate() async {
+    // Esperar a que termine la animación (3s) antes de navegar
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
       context.go('/welcome');
-    });
+      return;
+    }
+
+    // Usuario autenticado: leer rol desde Firestore
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (!mounted) return;
+
+      final role = doc.data()?['role'] as String?;
+      if (role == 'business') {
+        context.go('/business/home/dashboard');
+      } else {
+        context.go('/client/home');
+      }
+    } catch (_) {
+      if (!mounted) return;
+      // Si falla la lectura, ir a welcome por seguridad
+      context.go('/welcome');
+    }
   }
 
   @override

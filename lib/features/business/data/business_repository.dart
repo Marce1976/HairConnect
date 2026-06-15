@@ -31,6 +31,16 @@ class BusinessRepository {
     return _db.collection('services').snapshots();
   }
 
+  /// Obtiene todos los servicios en una sola llamada (para diálogos).
+  Future<List<Map<String, dynamic>>> getServicesList() async {
+    final snapshot = await _db.collection('services').get();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      data['id'] = doc.id;
+      return data;
+    }).toList();
+  }
+
   Future<void> updateBookingStatus({
     required String bookingId,
     required String status,
@@ -198,15 +208,26 @@ class BusinessRepository {
     String? city,
     String? phone,
     String? description,
+    String? photoUrl,
+    String? instagram,
+    String? facebook,
+    String? website,
+    String? schedule,
   }) async {
     try {
-      await _db.collection('salons').doc(salonId).update({
+      final data = <String, dynamic>{
         'name': name,
         'address': address,
-        '?city': city,
-        '?phone': phone,
-        '?description': description,
-      });
+      };
+      if (city != null) data['city'] = city;
+      if (phone != null) data['phone'] = phone;
+      if (description != null) data['description'] = description;
+      if (photoUrl != null) data['photoUrl'] = photoUrl;
+      if (instagram != null) data['instagram'] = instagram;
+      if (facebook != null) data['facebook'] = facebook;
+      if (website != null) data['website'] = website;
+      if (schedule != null) data['schedule'] = schedule;
+      await _db.collection('salons').doc(salonId).update(data);
     } catch (e) {
       throw Exception('Error al actualizar salón: $e');
     }
@@ -353,6 +374,163 @@ class BusinessRepository {
       });
     } catch (e) {
       throw Exception('Error al eliminar imagen de la galería: $e');
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Gestión de productos / inventario
+  // ─────────────────────────────────────────────
+
+  /// Obtiene el stream de productos de un salón.
+  Stream<QuerySnapshot> getProducts(String salonId) {
+    return _db
+        .collection('products')
+        .where('salonId', isEqualTo: salonId)
+        .snapshots();
+  }
+
+  /// Añade un nuevo producto. Devuelve el ID del documento creado.
+  Future<String> addProduct({
+    required String name,
+    String description = '',
+    required int quantity,
+    int minStock = 5,
+    String unit = 'unidad',
+    double price = 0.0,
+    required String salonId,
+    List<String> serviceIds = const [],
+  }) async {
+    try {
+      final doc = await _db.collection('products').add({
+        'name': name,
+        'description': description,
+        'quantity': quantity,
+        'minStock': minStock,
+        'unit': unit,
+        'price': price,
+        'salonId': salonId,
+        'serviceIds': serviceIds,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return doc.id;
+    } catch (e) {
+      throw Exception('Error al añadir producto: $e');
+    }
+  }
+
+  /// Actualiza un producto existente.
+  Future<void> updateProduct({
+    required String productId,
+    String? name,
+    String? description,
+    int? quantity,
+    int? minStock,
+    String? unit,
+    double? price,
+    List<String>? serviceIds,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (name != null) data['name'] = name;
+      if (description != null) data['description'] = description;
+      if (quantity != null) data['quantity'] = quantity;
+      if (minStock != null) data['minStock'] = minStock;
+      if (unit != null) data['unit'] = unit;
+      if (price != null) data['price'] = price;
+      if (serviceIds != null) data['serviceIds'] = serviceIds;
+      if (data.isNotEmpty) {
+        await _db.collection('products').doc(productId).update(data);
+      }
+    } catch (e) {
+      throw Exception('Error al actualizar producto: $e');
+    }
+  }
+
+  /// Elimina un producto.
+  Future<void> deleteProduct(String productId) async {
+    try {
+      await _db.collection('products').doc(productId).delete();
+    } catch (e) {
+      throw Exception('Error al eliminar producto: $e');
+    }
+  }
+
+  /// Registra un cambio en el historial de stock de un producto.
+  Future<void> recordStockChange({
+    required String productId,
+    required String productName,
+    required int previousQuantity,
+    required int newQuantity,
+    String note = '',
+  }) async {
+    try {
+      await _db
+          .collection('products')
+          .doc(productId)
+          .collection('stock_history')
+          .add({
+        'productName': productName,
+        'previousQuantity': previousQuantity,
+        'newQuantity': newQuantity,
+        'change': newQuantity - previousQuantity,
+        'note': note,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      // Silencioso — no bloquear la operación principal
+    }
+  }
+
+  /// Obtiene el historial de stock de un producto.
+  Stream<QuerySnapshot> getStockHistory(String productId) {
+    return _db
+        .collection('products')
+        .doc(productId)
+        .collection('stock_history')
+        .snapshots();
+  }
+
+  // ─────────────────────────────────────────────
+  // Gestión de notificaciones de stock bajo
+  // ─────────────────────────────────────────────
+
+  /// Obtiene los tokens FCM de los administradores del salón para enviarles
+  /// notificaciones push cuando un producto está por debajo del stock mínimo.
+  Future<List<String>> getAdminFcmTokens(String salonId) async {
+    try {
+      final salonDoc = await _db.collection('salons').doc(salonId).get();
+      final salonData = salonDoc.data();
+      if (salonData == null || !salonData.containsKey('ownerId')) {
+        return [];
+      }
+      final ownerId = salonData['ownerId'] as String;
+      final tokensSnapshot = await _db
+          .collection('users')
+          .doc(ownerId)
+          .collection('fcm_tokens')
+          .get();
+      return tokensSnapshot.docs
+          .map((doc) => doc.data()['token'] as String? ?? '')
+          .where((t) => t.isNotEmpty)
+          .toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Envía una notificación de stock bajo al owner del salón.
+  Future<void> notifyLowStock(String salonId, String productName) async {
+    try {
+      final salonDoc = await _db.collection('salons').doc(salonId).get();
+      final ownerId = salonDoc.data()?['ownerId'] as String?;
+      if (ownerId == null) return;
+      await _notificationService.sendNotification(
+        userId: ownerId,
+        title: 'Stock bajo',
+        message: 'El producto "$productName" está por debajo del stock mínimo.',
+      );
+    } catch (e) {
+      // Silencioso — no bloquear por una notificación
     }
   }
 }

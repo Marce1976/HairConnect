@@ -67,10 +67,8 @@ class _LookBookPageState extends State<LookBookPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Look & Book'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
       ),
       floatingActionButton: FloatingActionButton.small(
         backgroundColor: AppColors.primary,

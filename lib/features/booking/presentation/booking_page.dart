@@ -24,6 +24,7 @@ class BookingPage extends StatefulWidget {
 class _BookingPageState extends State<BookingPage> {
   Look? _look;
   bool _lookLoading = true;
+  bool _isBooking = false;
   String? _selectedDate;
   String? _selectedTime;
 
@@ -63,8 +64,10 @@ class _BookingPageState extends State<BookingPage> {
     return BlocListener<BookingBloc, BookingState>(
       listener: (context, state) {
         if (state is BookingLookConfirmed) {
+          setState(() => _isBooking = false);
           _showSuccessOverlay(state);
         } else if (state is BookingError) {
+          setState(() => _isBooking = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),
           );
@@ -314,7 +317,8 @@ class _BookingPageState extends State<BookingPage> {
               onPressed:
                   _selectedDate != null &&
                           _selectedTime != null &&
-                          _selectedTime!.isNotEmpty
+                          _selectedTime!.isNotEmpty &&
+                          !_isBooking
                       ? () => _confirmBooking(look)
                       : null,
               style: ElevatedButton.styleFrom(
@@ -325,11 +329,20 @@ class _BookingPageState extends State<BookingPage> {
                 ),
                 elevation: 2,
               ),
-              child: const Text(
-                'Confirmar reserva',
-                style: TextStyle(
-                    fontSize: 17, fontWeight: FontWeight.bold),
-              ),
+              child: _isBooking
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Confirmar reserva',
+                      style: TextStyle(
+                          fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
             ),
           ),
           const SizedBox(height: 16),
@@ -428,6 +441,7 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   void _confirmBooking(Look look) {
+    setState(() => _isBooking = true);
     final finalPrice = look.onSale ? look.salePrice! : (look.price ?? '');
     context.read<BookingBloc>().add(ConfirmLookBooking(
           lookId: look.id,
@@ -474,7 +488,7 @@ class _BookingPageState extends State<BookingPage> {
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  context.go('/lookbook');
+                  context.replace('/lookbook');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,

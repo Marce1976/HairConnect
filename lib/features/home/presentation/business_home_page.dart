@@ -1,25 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Shell widget used by GoRouter's ShellRoute.
-/// Provides the shared AppBar, logout action, and BottomNavigationBar
-/// for all business sub-pages (agenda, stylists, services, stats).
+/// Proporciona el AppBar compartido con botón de volver al inicio,
+/// campana de notificaciones y cierre de sesión.
 class BusinessShell extends StatelessWidget {
   final Widget child;
 
   const BusinessShell({super.key, required this.child});
-
-  int _currentIndex(String location) {
-    if (location.contains('/business/home/stylists')) return 1;
-    if (location.contains('/business/home/services')) return 2;
-    if (location.contains('/business/home/looks')) return 3;
-    if (location.contains('/business/home/salon')) return 4;
-    if (location.contains('/business/home/stats')) return 5;
-    return 0; // agenda (default)
-  }
 
   Future<void> _confirmLogout(BuildContext context) async {
     final authBloc = context.read<AuthBloc>();
@@ -48,10 +40,9 @@ class BusinessShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    final currentIndex = _currentIndex(location);
-
     return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          current is AuthInitial && previous is! AuthInitial,
       listener: (context, state) {
         if (state is AuthInitial) {
           context.go('/welcome');
@@ -59,67 +50,65 @@ class BusinessShell extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           title: GestureDetector(
             onLongPress: () => context.go('/admin/create-salon'),
             child: const Text('Area de Negocio'),
           ),
-          automaticallyImplyLeading: false,
           actions: [
+            // Campana de notificaciones con badge de no leídas
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('notifications')
+                  .where('userId',
+                      isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                  .where('read', isEqualTo: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                final unread = snapshot.data?.docs.length ?? 0;
+                return Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: () => context.push('/notifications'),
+                    ),
+                    if (unread > 0)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Text(
+                            unread > 9 ? '9+' : '$unread',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () => _confirmLogout(context),
             ),
           ],
         ),
+        // Cuerpo sin bottom nav — toda la pantalla para el contenido
         body: child,
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (index) {
-            switch (index) {
-              case 0:
-                context.go('/business/home/agenda');
-              case 1:
-                context.go('/business/home/stylists');
-              case 2:
-                context.go('/business/home/services');
-              case 3:
-                context.go('/business/home/looks');
-              case 4:
-                context.go('/business/home/salon');
-              case 5:
-                context.go('/business/home/stats');
-            }
-          },
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textGrey,
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today),
-              label: 'Agenda',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people),
-              label: 'Estilistas',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.content_cut),
-              label: 'Servicios',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.image),
-              label: 'Looks',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.store),
-              label: 'Mi Salón',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart),
-              label: 'Estadísticas',
-            ),
-          ],
-        ),
       ),
     );
   }
