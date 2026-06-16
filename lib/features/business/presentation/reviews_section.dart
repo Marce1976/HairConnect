@@ -15,7 +15,6 @@ class ReviewsSection extends StatelessWidget {
       stream: FirebaseFirestore.instance
           .collection('reviews')
           .where('lookId', isEqualTo: lookId)
-          .orderBy('createdAt', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -60,6 +59,19 @@ class _ReviewsBody extends StatelessWidget {
   final List<QueryDocumentSnapshot> reviews;
 
   const _ReviewsBody({required this.lookId, required this.reviews});
+
+  List<QueryDocumentSnapshot> _sortedReviews() {
+    final sorted = List<QueryDocumentSnapshot>.from(reviews);
+    sorted.sort((a, b) {
+      final aTs = (a.data() as Map)['createdAt'] as Timestamp?;
+      final bTs = (b.data() as Map)['createdAt'] as Timestamp?;
+      if (aTs == null && bTs == null) return 0;
+      if (aTs == null) return 1;
+      if (bTs == null) return -1;
+      return bTs.compareTo(aTs);
+    });
+    return sorted;
+  }
 
   double _averageRating() {
     if (reviews.isEmpty) return 0;
@@ -165,7 +177,7 @@ class _ReviewsBody extends StatelessWidget {
             ),
           )
         else
-          ...reviews.map((doc) {
+          ..._sortedReviews().map((doc) {
             final data = doc.data() as Map<String, dynamic>;
             return _ReviewCard(review: data);
           }),
