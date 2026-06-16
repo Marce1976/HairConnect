@@ -223,162 +223,177 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
     );
     showDialog(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(24, 20, 24, 16 + MediaQuery.of(ctx).viewInsets.bottom),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text('Editar Look', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 20),
-                  // Previsualización de la imagen actual
-                  ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 120,
-                    child: Image.network(
-                      imageUrlController.text,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        child: Icon(Icons.broken_image, color: AppColors.textGrey),
-                      ),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Editar Look'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Previsualización de la imagen actual
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 120,
+                  child: Image.network(
+                    imageUrlController.text,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Container(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      child: Icon(Icons.broken_image, color: AppColors.textGrey),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: imageUrlController,
-                  decoration: const InputDecoration(
-                    labelText: 'URL de la imagen',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-                    prefixIcon: Icon(Icons.link),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: imageUrlController,
+                decoration: const InputDecoration(
+                  labelText: 'URL de la imagen',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
-                  keyboardType: TextInputType.url,
+                  prefixIcon: Icon(Icons.link),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Descripción',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: servicesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Servicios',
-                    hintText: 'Ej: Corte, Color, Peinado',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: priceController,
-                  decoration: const InputDecoration(
-                    labelText: 'Precio normal (€)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: servicesController,
+                decoration: const InputDecoration(
+                  labelText: 'Servicios',
+                  hintText: 'Ej: Corte, Color, Peinado',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
-                  keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: saleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Precio oferta (€) — dejar vacío si no hay',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: priceController,
+                decoration: const InputDecoration(
+                  labelText: 'Precio normal (€)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
-                  keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: videoUrlController,
-                  decoration: const InputDecoration(
-                    labelText: 'URL del vídeo (opcional)',
-                    hintText: 'https://ejemplo.com/video.mp4',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-                    prefixIcon: Icon(Icons.videocam),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: saleController,
+                decoration: const InputDecoration(
+                  labelText: 'Precio oferta (€) — dejar vacío si no hay',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
-                  keyboardType: TextInputType.url,
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: afterImageUrlController,
-                  decoration: const InputDecoration(
-                    labelText: 'URL del "después" (opcional)',
-                    hintText: 'https://ejemplo.com/despues.jpg',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-                    prefixIcon: Icon(Icons.compare),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: videoUrlController,
+                decoration: const InputDecoration(
+                  labelText: 'URL del vídeo (opcional)',
+                  hintText: 'https://ejemplo.com/video.mp4',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
-                  keyboardType: TextInputType.url,
+                  prefixIcon: Icon(Icons.videocam),
                 ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      final servicesText = servicesController.text.trim();
-                      final services = servicesText.isNotEmpty
-                          ? servicesText
-                              .split(',')
-                              .map((s) => s.trim())
-                              .where((s) => s.isNotEmpty)
-                              .toList()
-                          : [];
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: afterImageUrlController,
+                decoration: const InputDecoration(
+                  labelText: 'URL del "después" (opcional)',
+                  hintText: 'https://ejemplo.com/despues.jpg',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  prefixIcon: Icon(Icons.compare),
+                ),
+                keyboardType: TextInputType.url,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final servicesText = servicesController.text.trim();
+                    final services = servicesText.isNotEmpty
+                        ? servicesText
+                            .split(',')
+                            .map((s) => s.trim())
+                            .where((s) => s.isNotEmpty)
+                            .toList()
+                        : [];
 
-                      final description = descriptionController.text.trim();
-                      final videoUrl = videoUrlController.text.trim();
-                      final afterImageUrl = afterImageUrlController.text.trim();
+                    final description = descriptionController.text.trim();
+                    final videoUrl = videoUrlController.text.trim();
+                    final afterImageUrl = afterImageUrlController.text.trim();
 
-                      await _lookRepository.updateLook(look.id, {
-                        'imageUrl': imageUrlController.text.trim().isNotEmpty
-                            ? imageUrlController.text.trim()
-                            : look.imageUrl,
-                        'description': description.isNotEmpty ? description : null,
-                        'services': services.isNotEmpty ? services : [],
-                        'price': priceController.text.trim().isNotEmpty
-                            ? priceController.text.trim()
-                            : null,
-                        'salePrice': saleController.text.trim().isNotEmpty
-                            ? saleController.text.trim()
-                            : null,
-                        'videoUrl': videoUrl.isNotEmpty ? videoUrl : null,
-                        'afterImageUrl': afterImageUrl.isNotEmpty ? afterImageUrl : null,
-                      });
-                      if (ctx.mounted) Navigator.pop(ctx);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    await _lookRepository.updateLook(look.id, {
+                      'imageUrl': imageUrlController.text.trim().isNotEmpty
+                          ? imageUrlController.text.trim()
+                          : look.imageUrl,
+                      'description': description.isNotEmpty ? description : null,
+                      'services': services.isNotEmpty ? services : [],
+                      'price': priceController.text.trim().isNotEmpty
+                          ? priceController.text.trim()
+                          : null,
+                      'salePrice': saleController.text.trim().isNotEmpty
+                          ? saleController.text.trim()
+                          : null,
+                      'videoUrl': videoUrl.isNotEmpty ? videoUrl : null,
+                      'afterImageUrl': afterImageUrl.isNotEmpty ? afterImageUrl : null,
+                    });
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Text('Guardar'),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 44,
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-                    child: const Text('Cancelar'),
                   ),
+                  child: const Text('Guardar'),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
       ),
     );
   }
