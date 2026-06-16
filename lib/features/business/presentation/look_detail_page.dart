@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'package:video_player/video_player.dart';
+
+import 'package:share_plus/share_plus.dart';
 
 import 'package:hair_connect/core/di/service_locator.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
@@ -10,6 +15,7 @@ import 'package:hair_connect/features/business/data/favorite_service.dart';
 import 'package:hair_connect/features/business/data/look_repository.dart';
 import 'package:hair_connect/features/business/domain/look.dart';
 import 'package:hair_connect/features/business/domain/salon.dart';
+import 'package:hair_connect/features/business/presentation/reviews_section.dart';
 
 class LookDetailPage extends StatefulWidget {
   final String lookId;
@@ -72,6 +78,15 @@ class _LookDetailPageState extends State<LookDetailPage> {
         title: const Text('Detalle del Look'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        actions: [
+          if (_look != null)
+            IconButton(
+              icon: const Icon(Icons.share),
+              tooltip: 'Compartir',
+              onPressed: () => _shareLook(_look!),
+            ),
+        ],
       ),
       body: _buildBody(),
     );
@@ -109,11 +124,11 @@ class _LookDetailPageState extends State<LookDetailPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppColors.textGrey),
+            Icon(Icons.error_outline, size: 64, color: AppColors.textGrey),
             const SizedBox(height: 16),
             Text(
               message,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 color: AppColors.textGrey,
               ),
@@ -159,6 +174,8 @@ class _LookDetailPageState extends State<LookDetailPage> {
                         const SizedBox(height: 16),
                       if (look.price != null && look.price!.isNotEmpty)
                         _buildPrice(look),
+                      const SizedBox(height: 8),
+                      ReviewsSection(lookId: widget.lookId),
                     ],
                   ),
                 ),
@@ -191,7 +208,7 @@ class _LookDetailPageState extends State<LookDetailPage> {
                 width: double.infinity,
                 errorBuilder: (_, _, _) => Container(
                   color: AppColors.primary.withValues(alpha: 0.1),
-                  child: const Icon(
+                  child: Icon(
                     Icons.broken_image,
                     size: 64,
                     color: AppColors.textGrey,
@@ -242,6 +259,50 @@ class _LookDetailPageState extends State<LookDetailPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _shareLook(Look look) async {
+    try {
+      // Capturar el origen para el popover en iPad ANTES del async gap
+      final RenderBox? box = context.findRenderObject() as RenderBox?;
+      final Rect? shareOrigin = box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+
+      // Descargar la imagen a un archivo temporal
+      final imageResponse = await http.get(Uri.parse(look.imageUrl));
+      if (imageResponse.statusCode != 200) {
+        throw Exception('Error al descargar la imagen');
+      }
+
+      final tempDir = Directory.systemTemp;
+      final ext = look.imageUrl.contains('.png') ? 'png' : 'jpg';
+      final tempFile = File(
+        '${tempDir.path}/hairconnect_look_${DateTime.now().millisecondsSinceEpoch}.$ext',
+      );
+      await tempFile.writeAsBytes(imageResponse.bodyBytes);
+
+      // Texto del look
+      final buffer = StringBuffer()
+        ..write('¡Mira este look en HairConnect! 💇‍♂️')
+        ..write('\n\n')
+        ..write('Salón: ${look.salonName}');
+      if (look.description != null && look.description!.isNotEmpty) {
+        buffer.write('\n${look.description}');
+      }
+      if (look.price != null && look.price!.isNotEmpty) {
+        buffer.write('\nPrecio: ${look.salePrice ?? look.price}');
+      }
+
+      await Share.shareXFiles(
+        [XFile(tempFile.path)],
+        text: buffer.toString(),
+        subject: 'Look en HairConnect - ${look.salonName}',
+        sharePositionOrigin: shareOrigin,
+      );
+    } catch (e) {
+      debugPrint('Error al compartir: $e');
+    }
   }
 
   void _showMediaViewer(Look look) {
@@ -355,7 +416,7 @@ class _LookDetailPageState extends State<LookDetailPage> {
               Expanded(
                 child: Text(
                   look.salonName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 22,
                     color: AppColors.textDark,
@@ -371,11 +432,11 @@ class _LookDetailPageState extends State<LookDetailPage> {
         if (look.stylistName != null)
           Row(
             children: [
-              const Icon(Icons.person, size: 18, color: AppColors.textGrey),
+              Icon(Icons.person, size: 18, color: AppColors.textGrey),
               const SizedBox(width: 6),
               Text(
                 look.stylistName!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   color: AppColors.textGrey,
                 ),
@@ -386,7 +447,7 @@ class _LookDetailPageState extends State<LookDetailPage> {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.content_cut, size: 18, color: AppColors.textGrey),
+              Icon(Icons.content_cut, size: 18, color: AppColors.textGrey),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -452,13 +513,13 @@ class _LookDetailPageState extends State<LookDetailPage> {
         );
         return Row(
           children: [
-            const Icon(Icons.location_on_outlined,
+            Icon(Icons.location_on_outlined,
                 size: 18, color: AppColors.textGrey),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 salon.address,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textGrey,
                 ),
@@ -474,7 +535,7 @@ class _LookDetailPageState extends State<LookDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Descripción',
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -485,7 +546,7 @@ class _LookDetailPageState extends State<LookDetailPage> {
         const SizedBox(height: 8),
         Text(
           description,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             color: AppColors.textDark,
             height: 1.5,
@@ -499,7 +560,7 @@ class _LookDetailPageState extends State<LookDetailPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Servicios',
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -549,7 +610,7 @@ class _LookDetailPageState extends State<LookDetailPage> {
           if (look.onSale) ...[
             Text(
               '€${look.price!}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 decoration: TextDecoration.lineThrough,
                 color: AppColors.textGrey,

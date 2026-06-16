@@ -161,10 +161,10 @@ class _AgendaPageState extends State<AgendaPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline,
+                  Icon(Icons.error_outline,
                       size: 48, color: AppColors.textGrey),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'Error al cargar la agenda',
                     style:
                         TextStyle(fontSize: 16, color: AppColors.textDark),
@@ -172,7 +172,7 @@ class _AgendaPageState extends State<AgendaPage> {
                   const SizedBox(height: 8),
                   Text(
                     '${snapshot.error}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12, color: AppColors.textGrey),
                     textAlign: TextAlign.center,
                   ),
@@ -271,7 +271,7 @@ class _AgendaPageState extends State<AgendaPage> {
                   const SizedBox(width: 8),
                   Text(
                     isToday ? 'Hoy' : todayStr,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                       color: AppColors.textDark,
@@ -313,7 +313,7 @@ class _AgendaPageState extends State<AgendaPage> {
                             isToday
                                 ? 'No hay reservas para hoy'
                                 : 'No hay reservas para este día',
-                            style: const TextStyle(color: AppColors.textGrey),
+                            style: TextStyle(color: AppColors.textGrey),
                           ),
                         ],
                       ),
@@ -377,7 +377,7 @@ class _AgendaPageState extends State<AgendaPage> {
                                         if (booking['stylist'] != null)
                                           Text(
                                             '${booking['stylist']}',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               color: AppColors.textGrey,
                                               fontSize: 13,
                                             ),
@@ -387,7 +387,7 @@ class _AgendaPageState extends State<AgendaPage> {
                                                 .isNotEmpty)
                                           Text(
                                             booking['salonName'],
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               color: AppColors.textGrey,
                                               fontSize: 12,
                                             ),

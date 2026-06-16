@@ -48,6 +48,7 @@ class _SalonSearchPageState extends State<SalonSearchPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Buscar Salones'),
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
@@ -83,7 +84,7 @@ class _SalonSearchPageState extends State<SalonSearchPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  const Icon(Icons.location_city,
+                  Icon(Icons.location_city,
                       size: 18, color: AppColors.textGrey),
                   const SizedBox(width: 8),
                   Expanded(
@@ -126,7 +127,7 @@ class _SalonSearchPageState extends State<SalonSearchPage> {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
                       'No hay salones disponibles',
                       style: TextStyle(color: AppColors.textGrey),
@@ -148,7 +149,7 @@ class _SalonSearchPageState extends State<SalonSearchPage> {
                       }).toList();
 
                 if (filteredSalons.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
                       'No se encontraron salones',
                       style: TextStyle(color: AppColors.textGrey),
@@ -200,7 +201,7 @@ class _SalonSearchPageState extends State<SalonSearchPage> {
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.location_on_outlined,
                                           size: 14,
                                           color: AppColors.textGrey,
@@ -209,7 +210,7 @@ class _SalonSearchPageState extends State<SalonSearchPage> {
                                         Expanded(
                                           child: Text(
                                             salon.address,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               color: AppColors.textGrey,
                                               fontSize: 14,
                                             ),
@@ -222,7 +223,7 @@ class _SalonSearchPageState extends State<SalonSearchPage> {
                                       const SizedBox(height: 2),
                                       Row(
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.location_city,
                                             size: 14,
                                             color: AppColors.textGrey,
@@ -230,7 +231,7 @@ class _SalonSearchPageState extends State<SalonSearchPage> {
                                           const SizedBox(width: 4),
                                           Text(
                                             salon.city!,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               color: AppColors.textGrey,
                                               fontSize: 13,
                                             ),
@@ -261,7 +262,7 @@ class _SalonSearchPageState extends State<SalonSearchPage> {
                                   ],
                                 ),
                               ),
-                              const Icon(
+                              Icon(
                                 Icons.chevron_right,
                                 color: AppColors.textGrey,
                               ),

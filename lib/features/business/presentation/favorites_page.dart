@@ -18,7 +18,7 @@ class FavoritesPage extends StatelessWidget {
     final lookRepository = sl<LookRepository>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis Favoritos')),
+      appBar: AppBar(title: const Text('Mis Favoritos'), automaticallyImplyLeading: false),
       body: StreamBuilder<QuerySnapshot>(
         stream: favoriteService.getFavoritesStream(),
         builder: (context, snapshot) {
@@ -36,7 +36,7 @@ class FavoritesPage extends StatelessWidget {
                   Icon(Icons.favorite_border,
                       size: 64, color: AppColors.textGrey),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'No tienes looks favoritos aún',
                     style: TextStyle(color: AppColors.textGrey, fontSize: 16),
                   ),
@@ -77,7 +77,7 @@ class FavoritesPage extends StatelessWidget {
                       Icon(Icons.favorite_border,
                           size: 64, color: AppColors.textGrey),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'No tienes looks favoritos aún',
                         style:
                             TextStyle(color: AppColors.textGrey, fontSize: 16),
@@ -168,7 +168,7 @@ class FavoritesPage extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       look.stylistName!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textGrey,
                         fontSize: 12,
                       ),

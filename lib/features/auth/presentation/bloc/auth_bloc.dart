@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:meta/meta.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hair_connect/features/auth/data/auth_service.dart';
 import 'package:hair_connect/core/di/service_locator.dart';
@@ -59,12 +59,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    emit(AuthLoading());
     try {
       await _authService.logout();
-      emit(AuthInitial());
     } catch (e) {
-      emit(AuthFailure('Error al cerrar sesión: $e'));
+      debugPrint('Error en logout (no crítico): $e');
     }
+    emit(AuthInitial());
   }
 
   Future<void> _onGoogleSignInRequested(

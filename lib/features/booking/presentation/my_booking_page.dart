@@ -67,22 +67,51 @@ class _MyBookingPageState extends State<MyBookingPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Cancelar Reserva'),
         content: const Text(
           '¿Estás seguro de que deseas cancelar esta reserva?',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('No'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Navigator.pop(ctx);
-              _cancelBooking(bookingId);
-            },
-            child: const Text('Sí, cancelar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _cancelBooking(bookingId);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Sí, cancelar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('No'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -147,7 +176,7 @@ class _MyBookingPageState extends State<MyBookingPage> {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mi Cita')),
+      appBar: AppBar(title: const Text('Mi Cita'), automaticallyImplyLeading: false),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('bookings')
@@ -183,10 +212,10 @@ class _MyBookingPageState extends State<MyBookingPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.event_busy,
+                    Icon(Icons.event_busy,
                         size: 80, color: AppColors.textGrey),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'No tienes citas próximas',
                       style: TextStyle(
                         color: AppColors.textGrey,
@@ -195,7 +224,7 @@ class _MyBookingPageState extends State<MyBookingPage> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Explora looks y reserva tu primera cita',
                       style: TextStyle(
                           color: AppColors.textGrey, fontSize: 14),
@@ -292,7 +321,7 @@ class _MyBookingPageState extends State<MyBookingPage> {
                             padding: const EdgeInsets.only(bottom: 16),
                             child: Text(
                               'Servicios: ${(data['services'] as List).join(', ')}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textGrey,
                                 fontSize: 13,
                               ),

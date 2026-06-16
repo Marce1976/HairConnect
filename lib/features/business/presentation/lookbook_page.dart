@@ -69,6 +69,7 @@ class _LookBookPageState extends State<LookBookPage> {
         title: const Text('Look & Book'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
       ),
       floatingActionButton: FloatingActionButton.small(
         backgroundColor: AppColors.primary,
@@ -123,7 +124,7 @@ class _LookBookPageState extends State<LookBookPage> {
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : filteredLooks.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Text(
                               'No hay looks disponibles',
                               style: TextStyle(color: AppColors.textGrey),
@@ -345,7 +346,7 @@ class _LookBookPageState extends State<LookBookPage> {
                     const SizedBox(height: 2),
                     Text(
                       look.stylistName!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textGrey,
                         fontSize: 12,
                       ),
@@ -373,7 +374,7 @@ class _LookBookPageState extends State<LookBookPage> {
                             children: [
                               Text(
                                 '€${look.price}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   decoration: TextDecoration.lineThrough,
                                   color: AppColors.textGrey,
                                   fontSize: 11,

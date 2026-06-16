@@ -27,6 +27,7 @@ class NotificationsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notificaciones'),
+        automaticallyImplyLeading: false,
         actions: [
           StreamBuilder<QuerySnapshot>(
             stream: notificationsRef.snapshots(),
@@ -54,7 +55,7 @@ class NotificationsPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -124,7 +125,7 @@ class NotificationsPage extends StatelessWidget {
                       children: [
                         Text(
                           notification['message'] ?? '',
-                          style: const TextStyle(color: AppColors.textGrey),
+                          style: TextStyle(color: AppColors.textGrey),
                         ),
                         if (notification['createdAt'] != null)
                           Padding(
@@ -132,7 +133,7 @@ class NotificationsPage extends StatelessWidget {
                             child: Text(
                               _formatTimestamp(
                                   notification['createdAt'] as Timestamp),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textGrey,
                                 fontSize: 11,
                               ),

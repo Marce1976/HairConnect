@@ -78,6 +78,7 @@ class _BookingPageState extends State<BookingPage> {
           title: const Text('Confirmar reserva'),
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
+          automaticallyImplyLeading: false,
         ),
         body: _buildBody(),
       ),
@@ -86,7 +87,7 @@ class _BookingPageState extends State<BookingPage> {
 
   Widget _buildBody() {
     if (widget.lookId == null) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -111,10 +112,10 @@ class _BookingPageState extends State<BookingPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline,
+            Icon(Icons.error_outline,
                 size: 64, color: AppColors.textGrey),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No se pudo cargar el look',
               style: TextStyle(color: AppColors.textGrey, fontSize: 16),
             ),
@@ -148,7 +149,7 @@ class _BookingPageState extends State<BookingPage> {
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => Container(
                   color: AppColors.primary.withValues(alpha: 0.1),
-                  child: const Icon(Icons.broken_image,
+                  child: Icon(Icons.broken_image,
                       color: AppColors.textGrey),
                 ),
               ),
@@ -164,7 +165,7 @@ class _BookingPageState extends State<BookingPage> {
               Expanded(
                 child: Text(
                   look.salonName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark,
@@ -177,11 +178,11 @@ class _BookingPageState extends State<BookingPage> {
           if (look.stylistName != null)
             Row(
               children: [
-                const Icon(Icons.person, size: 18, color: AppColors.textGrey),
+                Icon(Icons.person, size: 18, color: AppColors.textGrey),
                 const SizedBox(width: 8),
                 Text(
                   look.stylistName!,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 15, color: AppColors.textGrey),
                 ),
               ],
@@ -190,7 +191,7 @@ class _BookingPageState extends State<BookingPage> {
 
           // ─── Servicios ───
           if (look.services != null && look.services!.isNotEmpty) ...[
-            const Text(
+            Text(
               'Servicios incluidos',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
@@ -241,7 +242,7 @@ class _BookingPageState extends State<BookingPage> {
                   if (look.onSale) ...[
                     Text(
                       '€${look.price!}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         decoration: TextDecoration.lineThrough,
                         color: AppColors.textGrey,
@@ -291,7 +292,7 @@ class _BookingPageState extends State<BookingPage> {
           // ─── Fecha y hora ───
           const Divider(),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Elige fecha y hora',
             style: TextStyle(
               fontWeight: FontWeight.bold,
@@ -393,7 +394,7 @@ class _BookingPageState extends State<BookingPage> {
             if (_selectedDate != null)
               GestureDetector(
                 onTap: () => setState(() => _selectedDate = null),
-                child: const Icon(Icons.close,
+                child: Icon(Icons.close,
                     size: 18, color: AppColors.textGrey),
               ),
           ],
@@ -468,7 +469,7 @@ class _BookingPageState extends State<BookingPage> {
           children: [
             const Icon(Icons.check_circle, color: Colors.green, size: 80),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               '¡Reserva confirmada!',
               style: TextStyle(
                 fontSize: 22,
@@ -517,7 +518,7 @@ class _BookingPageState extends State<BookingPage> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(text,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 15, color: AppColors.textDark)),
           ),
         ],

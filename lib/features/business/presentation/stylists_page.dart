@@ -20,6 +20,7 @@ class _StylistsPageState extends State<StylistsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Agregar Estilista'),
         content: TextField(
           controller: nameController,
@@ -31,17 +32,46 @@ class _StylistsPageState extends State<StylistsPage> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.trim().isEmpty) return;
-              await _repository.addStylist(nameController.text.trim());
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Agregar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (nameController.text.trim().isEmpty) return;
+                    await _repository.addStylist(nameController.text.trim());
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Agregar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -63,7 +93,7 @@ class _StylistsPageState extends State<StylistsPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'No hay estilistas disponibles',
                 style: TextStyle(color: AppColors.textGrey),

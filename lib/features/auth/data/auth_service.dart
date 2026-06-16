@@ -103,7 +103,11 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await _googleSignIn.signOut();
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {
+      // Si el usuario no inició sesión con Google, esto falla silenciosamente
+    }
     await _auth.signOut();
   }
 

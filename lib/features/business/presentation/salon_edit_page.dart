@@ -193,6 +193,7 @@ class _SalonEditPageState extends State<SalonEditPage> {
     final url = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('URL de la foto'),
         content: TextField(
           controller: controller,
@@ -206,16 +207,42 @@ class _SalonEditPageState extends State<SalonEditPage> {
           autofocus: true,
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Guardar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Guardar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -274,12 +301,12 @@ class _SalonEditPageState extends State<SalonEditPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.store, size: 64, color: AppColors.textGrey),
+          Icon(Icons.store, size: 64, color: AppColors.textGrey),
           const SizedBox(height: 16),
-          const Text('Aún no tienes un salón asignado',
+          Text('Aún no tienes un salón asignado',
               style: TextStyle(color: AppColors.textGrey, fontSize: 16)),
           const SizedBox(height: 8),
-          const Text('Contacta al administrador',
+          Text('Contacta al administrador',
               style: TextStyle(color: AppColors.textGrey, fontSize: 13)),
         ],
       ),
@@ -498,7 +525,7 @@ class _SalonEditPageState extends State<SalonEditPage> {
   Widget _sectionTitle(String text) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
         color: AppColors.textDark,
@@ -570,7 +597,7 @@ class _SalonEditPageState extends State<SalonEditPage> {
                               fontWeight: FontWeight.bold, fontSize: 16)),
                       if (_cityController.text.isNotEmpty)
                         Text(_cityController.text,
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: AppColors.textGrey, fontSize: 13)),
                     ],
                   ),
@@ -586,7 +613,7 @@ class _SalonEditPageState extends State<SalonEditPage> {
             if (_descriptionController.text.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(_descriptionController.text,
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: AppColors.textGrey, fontSize: 13),
                   maxLines: 3, overflow: TextOverflow.ellipsis),
             ],
@@ -621,7 +648,7 @@ class _SalonEditPageState extends State<SalonEditPage> {
           const SizedBox(width: 6),
           Expanded(
             child: Text(text,
-                style: const TextStyle(color: AppColors.textGrey, fontSize: 13)),
+                style: TextStyle(color: AppColors.textGrey, fontSize: 13)),
           ),
         ],
       ),

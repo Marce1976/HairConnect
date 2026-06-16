@@ -240,7 +240,7 @@ class _CreateSalonPageState extends State<CreateSalonPage> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'No tienes permisos de administrador.\n'
               'Esta sección es solo para el administrador de la app.',
               textAlign: TextAlign.center,

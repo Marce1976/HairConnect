@@ -27,7 +27,7 @@ class StatsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Estadísticas generales de tu negocio',
               style: TextStyle(color: AppColors.textGrey, fontSize: 14),
             ),
@@ -112,7 +112,7 @@ class StatsPage extends StatelessWidget {
                           color: Colors.green,
                         ),
                         const SizedBox(height: 24),
-                        const Text(
+                        Text(
                           'Reservas por estado',
                           style: TextStyle(
                             fontSize: 16,
@@ -151,7 +151,7 @@ class StatsPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ---- Próximas citas ----
-            const Text(
+            Text(
               'Próximas citas',
               style: TextStyle(
                 fontSize: 16,
@@ -242,7 +242,7 @@ class StatsPage extends StatelessWidget {
             .toList();
 
         if (upcoming.isEmpty) {
-          return const Card(
+          return Card(
             child: Padding(
               padding: EdgeInsets.all(24),
               child: Center(
@@ -276,7 +276,7 @@ class StatsPage extends StatelessWidget {
                 ),
                 subtitle: Text(
                   '${data['date'] ?? ''} a las ${data['time'] ?? ''} — ${data['stylist'] ?? '—'}',
-                  style: const TextStyle(color: AppColors.textGrey),
+                  style: TextStyle(color: AppColors.textGrey),
                 ),
                 trailing: Container(
                   padding:
@@ -349,7 +349,7 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textGrey,
                 fontSize: 12,
               ),

@@ -146,6 +146,13 @@ class _DashboardGrid extends StatelessWidget {
         color: AppColors.primary,
         onTap: () => context.push('/business/home/stats'),
       ),
+      _DashboardCard(
+        icon: Icons.receipt_long,
+        title: 'Facturación',
+        subtitle: 'Gestiona tus facturas',
+        color: const Color(0xFF26A69A),
+        onTap: () => context.push('/business/home/billing'),
+      ),
     ];
   }
 }
@@ -167,6 +174,8 @@ class _DashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Dependencia del tema para que se reconstruya al cambiar a modo oscuro
+    Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -195,7 +204,7 @@ class _DashboardCard extends StatelessWidget {
               const Spacer(),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textDark,

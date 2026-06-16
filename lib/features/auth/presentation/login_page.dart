@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -141,6 +142,107 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _showResetPasswordDialog(BuildContext context) {
+    final emailCtrl = TextEditingController(text: _emailController.text.trim());
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Recuperar contraseña'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Te enviaremos un enlace para restablecer tu contraseña.',
+              style: TextStyle(fontSize: 14, color: AppColors.textGrey),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailCtrl,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                hintText: 'tu@email.com',
+                prefixIcon: const Icon(Icons.email),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
+        ),
+        actions: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final email = emailCtrl.text.trim();
+                    if (email.isEmpty) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text('Introduce tu email')),
+                      );
+                      return;
+                    }
+                    try {
+                      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                      if (!ctx.mounted) return;
+                      Navigator.of(ctx).pop();
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('📧 Enlace enviado. Revisa tu bandeja de entrada.'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } catch (e) {
+                      if (!ctx.mounted) return;
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        SnackBar(
+                          content: Text('Error: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Enviar enlace'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(fontSize: 14),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _login() async {
     if (_emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty) {
@@ -215,7 +317,20 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       obscureText: true,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () => _showResetPasswordDialog(context),
+                        child: const Text(
+                          '¿Olvidaste tu contraseña?',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
                     Row(
                       children: [
                         Checkbox(

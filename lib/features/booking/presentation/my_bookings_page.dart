@@ -112,20 +112,49 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Cancelar reserva'),
         content: const Text('¿Estás seguro de que deseas cancelar esta reserva?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('No'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              Navigator.pop(ctx);
-              _cancelBooking(bookingId);
-            },
-            child: const Text('Sí, cancelar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _cancelBooking(bookingId);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Sí, cancelar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('No'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -168,14 +197,14 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Mis Reservas')),
+        appBar: AppBar(title: const Text('Mis Reservas'), automaticallyImplyLeading: false),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.lock, size: 64, color: AppColors.textGrey),
+              Icon(Icons.lock, size: 64, color: AppColors.textGrey),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Inicia sesión para ver tus reservas',
                 style: TextStyle(color: AppColors.textGrey, fontSize: 16),
               ),
@@ -191,7 +220,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis Reservas')),
+      appBar: AppBar(title: const Text('Mis Reservas'), automaticallyImplyLeading: false),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('bookings')
@@ -273,9 +302,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.event_busy, size: 80, color: AppColors.textGrey),
+            Icon(Icons.event_busy, size: 80, color: AppColors.textGrey),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'No tienes reservas aún',
               style: TextStyle(
                 color: AppColors.textGrey,
@@ -284,7 +313,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Explora looks y reserva tu primera cita',
               style: TextStyle(color: AppColors.textGrey, fontSize: 14),
             ),
@@ -316,7 +345,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,
@@ -470,7 +499,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
+            style: TextStyle(color: AppColors.textGrey, fontSize: 13),
           ),
         ),
       ],

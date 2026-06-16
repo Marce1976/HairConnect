@@ -138,18 +138,32 @@ class _StylistDetailPageState extends State<StylistDetailPage> {
 
           if (available.isEmpty) {
             return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: const Text('Agregar Servicio'),
               content: const Text('No hay más servicios disponibles.'),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cerrar'),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Cerrar'),
+                    ),
+                  ),
                 ),
               ],
             );
           }
 
           return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: const Text('Agregar Servicio'),
             content: SizedBox(
               width: double.maxFinite,
@@ -175,9 +189,21 @@ class _StylistDetailPageState extends State<StylistDetailPage> {
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancelar'),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
               ),
             ],
           );
@@ -218,7 +244,7 @@ class _StylistDetailPageState extends State<StylistDetailPage> {
                         children: [
                           Text(
                             widget.stylistName,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textDark,
@@ -226,7 +252,7 @@ class _StylistDetailPageState extends State<StylistDetailPage> {
                           ),
                           Text(
                             '${assignedList.length} servicios asignados',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textGrey,
                               fontSize: 14,
                             ),
@@ -240,7 +266,7 @@ class _StylistDetailPageState extends State<StylistDetailPage> {
                 // Lista de servicios
                 Expanded(
                   child: assignedList.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
                             'Sin servicios asignados',
                             style: TextStyle(color: AppColors.textGrey),

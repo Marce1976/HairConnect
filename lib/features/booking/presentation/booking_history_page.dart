@@ -44,7 +44,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Historial de Reservas')),
+      appBar: AppBar(title: const Text('Historial de Reservas'), automaticallyImplyLeading: false),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('bookings')
@@ -63,7 +63,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
             );
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -164,12 +164,12 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                         // Date + time
                         Row(
                           children: [
-                            const Icon(Icons.calendar_today,
+                            Icon(Icons.calendar_today,
                                 size: 14, color: AppColors.textGrey),
                             const SizedBox(width: 4),
                             Text(
                               '${booking['date'] ?? ''} a las ${booking['time'] ?? ''}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textGrey,
                                 fontSize: 13,
                               ),
@@ -181,12 +181,12 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                         // Stylist
                         Row(
                           children: [
-                            const Icon(Icons.person,
+                            Icon(Icons.person,
                                 size: 14, color: AppColors.textGrey),
                             const SizedBox(width: 4),
                             Text(
                               'Con ${booking['stylist'] ?? '—'}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.textGrey,
                                 fontSize: 13,
                               ),
@@ -200,7 +200,7 @@ class _BookingHistoryPageState extends State<BookingHistoryPage> {
                           const SizedBox(height: 4),
                           Text(
                             (booking['services'] as List).join(', '),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.textGrey,
                               fontSize: 12,
                             ),

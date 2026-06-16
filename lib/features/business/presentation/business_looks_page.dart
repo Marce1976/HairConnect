@@ -31,10 +31,10 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: AppColors.textGrey),
+                  Icon(Icons.error_outline, size: 64, color: AppColors.textGrey),
                   const SizedBox(height: 16),
                   Text('Error: ${snapshot.error}',
-                      style: const TextStyle(color: AppColors.textGrey)),
+                      style: TextStyle(color: AppColors.textGrey)),
                 ],
               ),
             );
@@ -50,9 +50,9 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.image_not_supported, size: 64, color: AppColors.textGrey),
+                  Icon(Icons.image_not_supported, size: 64, color: AppColors.textGrey),
                   const SizedBox(height: 16),
-                  const Text('No hay looks todavía',
+                  Text('No hay looks todavía',
                       style: TextStyle(color: AppColors.textGrey, fontSize: 16)),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -113,7 +113,7 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
                     height: double.infinity,
                     errorBuilder: (_, _, _) => Container(
                       color: AppColors.primary.withValues(alpha: 0.1),
-                      child: const Icon(Icons.broken_image, color: AppColors.textGrey),
+                      child: Icon(Icons.broken_image, color: AppColors.textGrey),
                     ),
                   ),
                   if (look.onSale)
@@ -151,7 +151,7 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
                     if (look.stylistName != null)
                       Text(
                         look.stylistName!,
-                        style: const TextStyle(color: AppColors.textGrey, fontSize: 13),
+                        style: TextStyle(color: AppColors.textGrey, fontSize: 13),
                       ),
                     const SizedBox(height: 4),
                     if (look.price != null && look.price!.isNotEmpty)
@@ -160,7 +160,7 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
                               children: [
                                 Text(
                                   '€${look.price!}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     decoration: TextDecoration.lineThrough,
                                     color: AppColors.textGrey,
                                     fontSize: 13,
@@ -193,7 +193,7 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.textGrey, size: 20),
+                  icon: Icon(Icons.edit, color: AppColors.textGrey, size: 20),
                   onPressed: () => _showEditLookDialog(look),
                 ),
                 IconButton(
@@ -224,6 +224,7 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Editar Look'),
         content: SingleChildScrollView(
           child: Column(
@@ -240,7 +241,7 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) => Container(
                       color: AppColors.primary.withValues(alpha: 0.1),
-                      child: const Icon(Icons.broken_image, color: AppColors.textGrey),
+                      child: Icon(Icons.broken_image, color: AppColors.textGrey),
                     ),
                   ),
                 ),
@@ -331,47 +332,72 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final servicesText = servicesController.text.trim();
-              final services = servicesText.isNotEmpty
-                  ? servicesText
-                      .split(',')
-                      .map((s) => s.trim())
-                      .where((s) => s.isNotEmpty)
-                      .toList()
-                  : [];
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final servicesText = servicesController.text.trim();
+                    final services = servicesText.isNotEmpty
+                        ? servicesText
+                            .split(',')
+                            .map((s) => s.trim())
+                            .where((s) => s.isNotEmpty)
+                            .toList()
+                        : [];
 
-              final description = descriptionController.text.trim();
-              final videoUrl = videoUrlController.text.trim();
-              final afterImageUrl = afterImageUrlController.text.trim();
+                    final description = descriptionController.text.trim();
+                    final videoUrl = videoUrlController.text.trim();
+                    final afterImageUrl = afterImageUrlController.text.trim();
 
-              await _lookRepository.updateLook(look.id, {
-                'imageUrl': imageUrlController.text.trim().isNotEmpty
-                    ? imageUrlController.text.trim()
-                    : look.imageUrl,
-                'description': description.isNotEmpty ? description : null,
-                'services': services.isNotEmpty ? services : [],
-                'price': priceController.text.trim().isNotEmpty
-                    ? priceController.text.trim()
-                    : null,
-                'salePrice': saleController.text.trim().isNotEmpty
-                    ? saleController.text.trim()
-                    : null,
-                'videoUrl': videoUrl.isNotEmpty ? videoUrl : null,
-                'afterImageUrl': afterImageUrl.isNotEmpty ? afterImageUrl : null,
-              });
-              if (ctx.mounted) Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Guardar'),
+                    await _lookRepository.updateLook(look.id, {
+                      'imageUrl': imageUrlController.text.trim().isNotEmpty
+                          ? imageUrlController.text.trim()
+                          : look.imageUrl,
+                      'description': description.isNotEmpty ? description : null,
+                      'services': services.isNotEmpty ? services : [],
+                      'price': priceController.text.trim().isNotEmpty
+                          ? priceController.text.trim()
+                          : null,
+                      'salePrice': saleController.text.trim().isNotEmpty
+                          ? saleController.text.trim()
+                          : null,
+                      'videoUrl': videoUrl.isNotEmpty ? videoUrl : null,
+                      'afterImageUrl': afterImageUrl.isNotEmpty ? afterImageUrl : null,
+                    });
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Guardar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -382,17 +408,46 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Eliminar look'),
         content: Text('¿Estás seguro de eliminar "${look.salonName}"?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Eliminar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

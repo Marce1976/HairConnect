@@ -203,7 +203,7 @@ class _UploadLookPageState extends State<UploadLookPage> {
                       preview,
                       fit: BoxFit.cover,
                       width: double.infinity,
-                      errorBuilder: (_, _, _) => const Center(
+                      errorBuilder: (_, _, _) => Center(
                         child: Text('URL inválida', style: TextStyle(color: AppColors.textGrey)),
                       ),
                     )

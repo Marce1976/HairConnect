@@ -18,6 +18,7 @@ class SalonDetailPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle del Salón'),
+        automaticallyImplyLeading: false,
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: repository.getSalonById(salonId),
@@ -27,7 +28,7 @@ class SalonDetailPage extends StatelessWidget {
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(
+            return Center(
               child: Text(
                 'Salón no encontrado',
                 style: TextStyle(color: AppColors.textGrey),
@@ -52,7 +53,7 @@ class SalonDetailPage extends StatelessWidget {
                     title: 'Descripción',
                     child: Text(
                       salon.description!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         color: AppColors.textDark,
                         height: 1.5,
@@ -140,7 +141,7 @@ class SalonDetailPage extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               salon.name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 22,
                 color: AppColors.textDark,
@@ -201,7 +202,7 @@ class SalonDetailPage extends StatelessWidget {
                     ),
                     Text(
                       '${salon.galleryImages?.length ?? 0} imágenes',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textGrey,
                         fontSize: 13,
                       ),
@@ -209,7 +210,7 @@ class SalonDetailPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.textGrey),
+              Icon(Icons.chevron_right, color: AppColors.textGrey),
             ],
           ),
         ),
@@ -223,7 +224,7 @@ class SalonDetailPage extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 18,
             color: AppColors.textDark,
@@ -247,7 +248,7 @@ class SalonDetailPage extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textGrey,
                 ),
@@ -255,7 +256,7 @@ class SalonDetailPage extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   color: AppColors.textDark,
                 ),
@@ -283,7 +284,7 @@ class SalonDetailPage extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Card(
+          return Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(12.0)),
             ),
@@ -321,7 +322,7 @@ class SalonDetailPage extends StatelessWidget {
                 ),
                 subtitle: Text(
                   '${data['duration'] as String? ?? ''} min - €${data['price'] as String? ?? ''}',
-                  style: const TextStyle(color: AppColors.textGrey),
+                  style: TextStyle(color: AppColors.textGrey),
                 ),
               ),
             );
@@ -347,7 +348,7 @@ class SalonDetailPage extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Card(
+          return Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(12.0)),
             ),

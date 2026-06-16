@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hair_connect/core/theme/app_colors.dart';
+import 'package:hair_connect/core/theme/bloc/theme_cubit.dart';
 import 'package:hair_connect/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -19,16 +20,46 @@ class _ClientHomePageState extends State<ClientHomePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Cerrar sesion'),
         content: const Text('Estas seguro de que quieres cerrar sesion?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Salir'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Salir'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -56,6 +87,16 @@ class _ClientHomePageState extends State<ClientHomePage> {
           title: const Text('Area Cliente'),
           automaticallyImplyLeading: false,
           actions: [
+            BlocBuilder<ThemeCubit, ThemeMode>(
+              builder: (context, themeMode) => IconButton(
+                icon: Icon(
+                  themeMode == ThemeMode.dark
+                      ? Icons.light_mode
+                      : Icons.dark_mode,
+                ),
+                onPressed: () => context.read<ThemeCubit>().toggle(),
+              ),
+            ),
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('notifications')
@@ -164,6 +205,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
 class _ClientGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // Dependencia del tema para que se reconstruya al cambiar a modo oscuro
+    Theme.of(context);
     final items = _items(context);
 
     return GridView.builder(
@@ -265,6 +308,8 @@ class _NextBookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Dependencia del tema para que se reconstruya al cambiar a modo oscuro
+    Theme.of(context);
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('bookings')
@@ -313,7 +358,7 @@ class _NextBookingCard extends StatelessWidget {
                             Icon(Icons.calendar_today,
                                 size: 18, color: AppColors.primary),
                             const SizedBox(width: 8),
-                            const Text(
+                            Text(
                               'Tu próxima cita',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
@@ -378,10 +423,10 @@ class _NextBookingCard extends StatelessWidget {
                     )
                   : Column(
                       children: [
-                        const Icon(Icons.event_busy,
+                        Icon(Icons.event_busy,
                             size: 48, color: AppColors.textGrey),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           'No tienes próximas citas',
                           style: TextStyle(
                             fontSize: 16,
@@ -429,7 +474,7 @@ class _NextBookingCard extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               color: AppColors.textDark,
             ),
@@ -460,6 +505,8 @@ class _ClientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Dependencia del tema para que se reconstruya al cambiar a modo oscuro
+    Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -488,7 +535,7 @@ class _ClientCard extends StatelessWidget {
               const Spacer(),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textDark,

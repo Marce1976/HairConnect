@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hair_connect/core/theme/app_colors.dart';
 import 'package:hair_connect/core/theme/app_theme.dart';
+import 'package:hair_connect/core/theme/bloc/theme_cubit.dart';
 import 'package:hair_connect/core/routes/app_router.dart';
 import 'package:hair_connect/core/di/service_locator.dart';
 import 'package:hair_connect/core/services/fcm_service.dart';
@@ -39,6 +41,7 @@ void main() async {
     MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => sl<AuthBloc>()),
+        BlocProvider(create: (_) => ThemeCubit()),
       ],
       child: const MyApp(),
     ),
@@ -55,11 +58,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'HairConnect',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      routerConfig: appRouter,
+    return BlocBuilder<ThemeCubit, ThemeMode>(
+      builder: (context, themeMode) {
+        // Sincronizar AppColors con el tema actual
+        final brightness = themeMode == ThemeMode.dark
+            ? Brightness.dark
+            : Brightness.light;
+        AppColors.updateBrightness(brightness);
+        return MaterialApp.router(
+          title: 'HairConnect',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeMode,
+          routerConfig: appRouter,
+        );
+      },
     );
   }
 }

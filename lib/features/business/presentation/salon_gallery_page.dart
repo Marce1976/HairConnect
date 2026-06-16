@@ -37,13 +37,13 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
         ),
         title: const Text('Agregar imagen'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Pega la URL de una imagen:',
               style: TextStyle(color: AppColors.textGrey, fontSize: 14),
             ),
@@ -89,30 +89,55 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final url = urlController.text.trim();
-              if (url.isEmpty) return;
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await _repository.addGalleryImage(widget.salonId, url);
-                if (ctx.mounted) Navigator.pop(ctx);
-                _refreshSalon();
-              } catch (e) {
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('Error al agregar imagen')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Agregar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final url = urlController.text.trim();
+                    if (url.isEmpty) return;
+                    final messenger = ScaffoldMessenger.of(context);
+                    try {
+                      await _repository.addGalleryImage(widget.salonId, url);
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      _refreshSalon();
+                    } catch (e) {
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('Error al agregar imagen')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Agregar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -123,17 +148,46 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Eliminar imagen'),
         content: const Text('¿Estás seguro de eliminar esta imagen?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Eliminar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Eliminar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -158,6 +212,7 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Galería del Salón'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.add_photo_alternate),
@@ -174,7 +229,7 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(
+            return Center(
               child: Text(
                 'Salón no encontrado',
                 style: TextStyle(color: AppColors.textGrey),
@@ -192,10 +247,10 @@ class _SalonGalleryPageState extends State<SalonGalleryPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.photo_library_outlined,
+                  Icon(Icons.photo_library_outlined,
                       size: 64, color: AppColors.textGrey),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'No hay imágenes en la galería',
                     style: TextStyle(color: AppColors.textGrey, fontSize: 16),
                   ),

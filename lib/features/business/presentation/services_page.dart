@@ -53,6 +53,7 @@ class _ServicesPageState extends State<ServicesPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Agregar Servicio'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -91,21 +92,50 @@ class _ServicesPageState extends State<ServicesPage>
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.trim().isEmpty || priceController.text.trim().isEmpty || durationController.text.trim().isEmpty) return;
-              await _repository.addService(
-                nameController.text.trim(),
-                priceController.text.trim(),
-                durationController.text.trim(),
-              );
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Agregar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (nameController.text.trim().isEmpty || priceController.text.trim().isEmpty || durationController.text.trim().isEmpty) return;
+                    await _repository.addService(
+                      nameController.text.trim(),
+                      priceController.text.trim(),
+                      durationController.text.trim(),
+                    );
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Agregar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -119,6 +149,7 @@ class _ServicesPageState extends State<ServicesPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Editar Servicio'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -157,22 +188,51 @@ class _ServicesPageState extends State<ServicesPage>
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.trim().isEmpty || priceController.text.trim().isEmpty || durationController.text.trim().isEmpty) return;
-              await _repository.updateService(
-                serviceId: serviceId,
-                name: nameController.text.trim(),
-                price: priceController.text.trim(),
-                duration: durationController.text.trim(),
-              );
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Guardar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (nameController.text.trim().isEmpty || priceController.text.trim().isEmpty || durationController.text.trim().isEmpty) return;
+                    await _repository.updateService(
+                      serviceId: serviceId,
+                      name: nameController.text.trim(),
+                      price: priceController.text.trim(),
+                      duration: durationController.text.trim(),
+                    );
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Guardar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -224,7 +284,7 @@ class _ServicesPageState extends State<ServicesPage>
           return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               'No hay servicios disponibles',
               style: TextStyle(color: AppColors.textGrey),
@@ -293,7 +353,7 @@ class _ServicesPageState extends State<ServicesPage>
                   ),
                   subtitle: Text(
                     '${service['duration'] ?? ''} min - €${service['price'] ?? ''}',
-                    style: const TextStyle(color: AppColors.textGrey),
+                    style: TextStyle(color: AppColors.textGrey),
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -324,7 +384,7 @@ class _ServicesPageState extends State<ServicesPage>
                       spacing: 6,
                       runSpacing: 4,
                       children: [
-                        const Icon(Icons.inventory_2,
+                        Icon(Icons.inventory_2,
                             size: 14, color: AppColors.textGrey),
                         const SizedBox(width: 4),
                         ...linkedProducts.map((p) => Chip(

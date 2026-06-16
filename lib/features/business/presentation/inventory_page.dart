@@ -175,7 +175,7 @@ class InventoryPageState extends State<InventoryPage> {
                       title: Text(serviceName, style: const TextStyle(fontSize: 14)),
                       subtitle: servicePrice.isNotEmpty
                           ? Text('€$servicePrice',
-                              style: const TextStyle(fontSize: 12, color: AppColors.textGrey))
+                              style: TextStyle(fontSize: 12, color: AppColors.textGrey))
                           : null,
                       value: selectedServices.contains(serviceId),
                       onChanged: (checked) {
@@ -194,65 +194,92 @@ class InventoryPageState extends State<InventoryPage> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('El nombre es obligatorio')),
-                  );
-                  return;
-                }
-                if (_salonId == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text(
-                            'No tienes un salón asignado. Contacta al administrador.')),
-                  );
-                  return;
-                }
-                try {
-                  final productId = await _repository.addProduct(
-                    name: nameController.text.trim(),
-                    description: descController.text.trim(),
-                    quantity: int.tryParse(qtyController.text.trim()) ?? 0,
-                    minStock: int.tryParse(minStockController.text.trim()) ?? 5,
-                    unit: unitController.text.trim().isEmpty
-                        ? 'unidad'
-                        : unitController.text.trim(),
-                    price: double.tryParse(priceController.text.trim()) ?? 0,
-                    salonId: _salonId!,
-                    serviceIds: selectedServices.toList(),
-                  );
-                  final qty = int.tryParse(qtyController.text.trim()) ?? 0;
-                  // Registrar stock inicial en historial
-                  await _repository.recordStockChange(
-                    productId: productId,
-                    productName: nameController.text.trim(),
-                    previousQuantity: 0,
-                    newQuantity: qty,
-                    note: 'Stock inicial',
-                  );
-                  // Notificar si el stock inicial ya es bajo
-                  final minStk =
-                      int.tryParse(minStockController.text.trim()) ?? 5;
-                  if (qty <= minStk) {
-                    await _repository.notifyLowStock(
-                        _salonId!, nameController.text.trim());
-                  }
-                  if (context.mounted) Navigator.pop(context);
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error al guardar: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('Agregar'),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (nameController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('El nombre es obligatorio')),
+                        );
+                        return;
+                      }
+                      if (_salonId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'No tienes un salón asignado. Contacta al administrador.')),
+                        );
+                        return;
+                      }
+                      try {
+                        final productId = await _repository.addProduct(
+                          name: nameController.text.trim(),
+                          description: descController.text.trim(),
+                          quantity: int.tryParse(qtyController.text.trim()) ?? 0,
+                          minStock: int.tryParse(minStockController.text.trim()) ?? 5,
+                          unit: unitController.text.trim().isEmpty
+                              ? 'unidad'
+                              : unitController.text.trim(),
+                          price: double.tryParse(priceController.text.trim()) ?? 0,
+                          salonId: _salonId!,
+                          serviceIds: selectedServices.toList(),
+                        );
+                        final qty = int.tryParse(qtyController.text.trim()) ?? 0;
+                        await _repository.recordStockChange(
+                          productId: productId,
+                          productName: nameController.text.trim(),
+                          previousQuantity: 0,
+                          newQuantity: qty,
+                          note: 'Stock inicial',
+                        );
+                        final minStk =
+                            int.tryParse(minStockController.text.trim()) ?? 5;
+                        if (qty <= minStk) {
+                          await _repository.notifyLowStock(
+                              _salonId!, nameController.text.trim());
+                        }
+                        if (context.mounted) Navigator.pop(context);
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error al guardar: $e')),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: const Text('Agregar'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -383,7 +410,7 @@ class InventoryPageState extends State<InventoryPage> {
                           style: const TextStyle(fontSize: 14)),
                       subtitle: servicePrice.isNotEmpty
                           ? Text('€$servicePrice',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 12, color: AppColors.textGrey))
                           : null,
                       value: selectedServices.contains(serviceId),
@@ -403,16 +430,45 @@ class InventoryPageState extends State<InventoryPage> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                didSave = true;
-                Navigator.pop(context);
-              },
-              child: const Text('Guardar'),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      didSave = true;
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: const Text('Guardar'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -463,18 +519,47 @@ class InventoryPageState extends State<InventoryPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Eliminar Producto'),
         content:
             Text('¿Estás seguro de eliminar "${product.name}"?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Eliminar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -499,7 +584,7 @@ class InventoryPageState extends State<InventoryPage> {
               }
               final docs = snapshot.data?.docs ?? [];
               if (docs.isEmpty) {
-                return const Padding(
+                return Padding(
                   padding: EdgeInsets.all(24),
                   child: Text(
                     'Sin historial de cambios',
@@ -566,7 +651,7 @@ class InventoryPageState extends State<InventoryPage> {
                         if (timestamp != null)
                           Text(
                             _formatTime(timestamp),
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 11, color: AppColors.textGrey),
                           ),
                       ],
@@ -578,9 +663,21 @@ class InventoryPageState extends State<InventoryPage> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Cerrar'),
+              ),
+            ),
           ),
         ],
       ),
@@ -605,9 +702,9 @@ class InventoryPageState extends State<InventoryPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.inventory_2, size: 64, color: AppColors.textGrey),
+            Icon(Icons.inventory_2, size: 64, color: AppColors.textGrey),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Cargando inventario...',
               style: TextStyle(color: AppColors.textGrey, fontSize: 16),
             ),
@@ -662,7 +759,7 @@ class InventoryPageState extends State<InventoryPage> {
 
                 final docs = snapshot.data?.docs ?? [];
                 if (docs.isEmpty && _searchQuery.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -707,7 +804,7 @@ class InventoryPageState extends State<InventoryPage> {
                 });
 
                 return products.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'Sin resultados',
                           style: TextStyle(color: AppColors.textGrey),
@@ -812,7 +909,7 @@ class _ProductCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   product.description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textGrey,
                     fontSize: 13,
                   ),

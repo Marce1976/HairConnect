@@ -110,6 +110,7 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
     final url = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('URL de la foto'),
         content: TextField(
           controller: controller,
@@ -123,17 +124,42 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
           autofocus: true,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Guardar'),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  child: const Text('Guardar'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -219,6 +245,7 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mi Perfil'),
+        automaticallyImplyLeading: false,
         actions: [
           if (!_isEditing)
             IconButton(
@@ -348,7 +375,7 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
               Center(
                 child: Text(
                   email,
-                  style: const TextStyle(color: AppColors.textGrey, fontSize: 14),
+                  style: TextStyle(color: AppColors.textGrey, fontSize: 14),
                 ),
               ),
               const SizedBox(height: 32),
@@ -394,7 +421,7 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline,
+                      Icon(Icons.info_outline,
                           color: AppColors.textGrey, size: 20),
                       const SizedBox(width: 12),
                       Column(
@@ -405,7 +432,7 @@ class _ClientProfilePageState extends State<ClientProfilePage> {
                           const SizedBox(height: 2),
                           Text(
                             data?['isClient'] == true ? 'Cliente' : 'Usuario',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: AppColors.textGrey, fontSize: 13),
                           ),
                         ],

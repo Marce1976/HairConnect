@@ -31,6 +31,8 @@ import 'package:hair_connect/features/business/presentation/seed_data_page.dart'
 import 'package:hair_connect/features/business/presentation/salon_gallery_page.dart';
 import 'package:hair_connect/features/business/presentation/salon_edit_page.dart';
 import 'package:hair_connect/features/admin/presentation/create_salon_page.dart';
+import 'package:hair_connect/features/billing/presentation/billing_page.dart';
+import 'package:hair_connect/features/billing/presentation/create_invoice_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -107,6 +109,14 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/business/home/stats',
           builder: (context, state) => const StatsPage(),
+        ),
+        GoRoute(
+          path: '/business/home/billing',
+          builder: (context, state) => const BillingPage(),
+        ),
+        GoRoute(
+          path: '/business/home/billing/create',
+          builder: (context, state) => const CreateInvoicePage(),
         ),
       ],
     ),
