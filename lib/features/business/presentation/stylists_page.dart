@@ -19,66 +19,68 @@ class _StylistsPageState extends State<StylistsPage> {
     final nameController = TextEditingController();
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Agregar Estilista',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre del Estilista',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
+      builder: (ctx) => SafeArea(
+        child: Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(24, 20, 24, 16 + MediaQuery.of(ctx).viewInsets.bottom),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Agregar Estilista',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (nameController.text.trim().isEmpty) return;
-                      await _repository.addStylist(nameController.text.trim());
-                      if (ctx.mounted) Navigator.pop(ctx);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      textStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nombre del Estilista',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
-                    child: const Text('Agregar'),
                   ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 44,
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (nameController.text.trim().isEmpty) return;
+                        await _repository.addStylist(nameController.text.trim());
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                      child: const Text('Agregar'),
                     ),
-                    child: const Text('Cancelar'),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 44,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

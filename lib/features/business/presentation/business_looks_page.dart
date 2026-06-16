@@ -223,19 +223,20 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
     );
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('Editar Look', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 20),
-                // Previsualización de la imagen actual
-                ClipRRect(
+      builder: (ctx) => SafeArea(
+        child: Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(24, 20, 24, 16 + MediaQuery.of(ctx).viewInsets.bottom),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('Editar Look', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  // Previsualización de la imagen actual
+                  ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: SizedBox(
                     width: double.infinity,
@@ -377,6 +378,7 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
