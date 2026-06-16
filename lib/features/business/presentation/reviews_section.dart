@@ -25,6 +25,28 @@ class ReviewsSection extends StatelessWidget {
           );
         }
 
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.error_outline,
+                      size: 32, color: AppColors.textGrey.withValues(alpha: 0.6)),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No se pudieron cargar las reseñas',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textGrey.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
         final docs = snapshot.data?.docs ?? [];
 
         return _ReviewsBody(lookId: lookId, reviews: docs);
