@@ -37,40 +37,36 @@ class _StylistsPageState extends State<StylistsPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (nameController.text.trim().isEmpty) return;
-                    await _repository.addStylist(nameController.text.trim());
-                    if (ctx.mounted) Navigator.pop(ctx);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (nameController.text.trim().isEmpty) return;
+                  await _repository.addStylist(nameController.text.trim());
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text('Agregar'),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  minimumSize: const Size(double.infinity, 50),
                 ),
+                child: const Text('Agregar'),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 44,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+              OutlinedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text('Cancelar'),
+                  minimumSize: const Size(double.infinity, 44),
                 ),
+                child: const Text('Cancelar'),
               ),
             ],
           ),

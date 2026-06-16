@@ -330,66 +330,62 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
                 keyboardType: TextInputType.url,
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final servicesText = servicesController.text.trim();
-                    final services = servicesText.isNotEmpty
-                        ? servicesText
-                            .split(',')
-                            .map((s) => s.trim())
-                            .where((s) => s.isNotEmpty)
-                            .toList()
-                        : [];
+              ElevatedButton(
+                onPressed: () async {
+                  final servicesText = servicesController.text.trim();
+                  final services = servicesText.isNotEmpty
+                      ? servicesText
+                          .split(',')
+                          .map((s) => s.trim())
+                          .where((s) => s.isNotEmpty)
+                          .toList()
+                      : [];
 
-                    final description = descriptionController.text.trim();
-                    final videoUrl = videoUrlController.text.trim();
-                    final afterImageUrl = afterImageUrlController.text.trim();
+                  final description = descriptionController.text.trim();
+                  final videoUrl = videoUrlController.text.trim();
+                  final afterImageUrl = afterImageUrlController.text.trim();
 
-                    await _lookRepository.updateLook(look.id, {
-                      'imageUrl': imageUrlController.text.trim().isNotEmpty
-                          ? imageUrlController.text.trim()
-                          : look.imageUrl,
-                      'description': description.isNotEmpty ? description : null,
-                      'services': services.isNotEmpty ? services : [],
-                      'price': priceController.text.trim().isNotEmpty
-                          ? priceController.text.trim()
-                          : null,
-                      'salePrice': saleController.text.trim().isNotEmpty
-                          ? saleController.text.trim()
-                          : null,
-                      'videoUrl': videoUrl.isNotEmpty ? videoUrl : null,
-                      'afterImageUrl': afterImageUrl.isNotEmpty ? afterImageUrl : null,
-                    });
-                    if (ctx.mounted) Navigator.pop(ctx);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  await _lookRepository.updateLook(look.id, {
+                    'imageUrl': imageUrlController.text.trim().isNotEmpty
+                        ? imageUrlController.text.trim()
+                        : look.imageUrl,
+                    'description': description.isNotEmpty ? description : null,
+                    'services': services.isNotEmpty ? services : [],
+                    'price': priceController.text.trim().isNotEmpty
+                        ? priceController.text.trim()
+                        : null,
+                    'salePrice': saleController.text.trim().isNotEmpty
+                        ? saleController.text.trim()
+                        : null,
+                    'videoUrl': videoUrl.isNotEmpty ? videoUrl : null,
+                    'afterImageUrl': afterImageUrl.isNotEmpty ? afterImageUrl : null,
+                  });
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text('Guardar'),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  minimumSize: const Size(double.infinity, 50),
                 ),
+                child: const Text('Guardar'),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 44,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+              OutlinedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text('Cancelar'),
+                  minimumSize: const Size(double.infinity, 44),
                 ),
+                child: const Text('Cancelar'),
               ),
             ],
           ),
@@ -404,46 +400,43 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Eliminar look'),
-        content: Text('¿Estás seguro de eliminar "${look.salonName}"?'),
-        actions: [
-          Column(
+        content: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+              Text('¿Estás seguro de eliminar "${look.salonName}"?'),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text('Eliminar'),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  minimumSize: const Size(double.infinity, 50),
                 ),
+                child: const Text('Eliminar'),
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 44,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+              OutlinedButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text('Cancelar'),
+                  minimumSize: const Size(double.infinity, 44),
                 ),
+                child: const Text('Cancelar'),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
 
