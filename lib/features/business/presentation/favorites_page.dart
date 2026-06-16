@@ -112,6 +112,7 @@ class FavoritesPage extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
       ),
       child: InkWell(
         onTap: () => context.push('/lookbook/${look.id}'),

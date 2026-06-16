@@ -282,6 +282,7 @@ class _LookBookPageState extends State<LookBookPage> {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
       ),
       child: InkWell(
         onTap: () => context.push('/lookbook/${look.id}'),

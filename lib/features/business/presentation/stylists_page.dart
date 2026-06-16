@@ -107,6 +107,7 @@ class _StylistsPageState extends State<StylistsPage> {
                 margin: const EdgeInsets.only(bottom: 12.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
+                  side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
                 ),
                 child: ListTile(
                   leading: const CircleAvatar(

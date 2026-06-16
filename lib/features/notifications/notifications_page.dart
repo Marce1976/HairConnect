@@ -98,6 +98,7 @@ class NotificationsPage extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
                   ),
                   color: isRead
                       ? Colors.white

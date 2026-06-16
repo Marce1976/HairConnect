@@ -300,6 +300,7 @@ class _MyBookingPageState extends State<MyBookingPage> {
                 Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),

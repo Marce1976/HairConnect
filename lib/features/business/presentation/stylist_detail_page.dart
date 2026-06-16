@@ -285,6 +285,7 @@ class _StylistDetailPageState extends State<StylistDetailPage> {
                               margin: const EdgeInsets.only(bottom: 8),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(

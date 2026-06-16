@@ -320,6 +320,7 @@ class _ServicesPageState extends State<ServicesPage>
           margin: const EdgeInsets.only(bottom: 12.0),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
+            side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

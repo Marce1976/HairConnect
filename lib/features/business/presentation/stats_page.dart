@@ -264,6 +264,7 @@ class StatsPage extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
               ),
               child: ListTile(
                 leading: CircleAvatar(
@@ -325,6 +326,7 @@ class _StatCard extends StatelessWidget {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Padding(

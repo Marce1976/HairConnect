@@ -95,7 +95,10 @@ class _BusinessLooksPageState extends State<BusinessLooksPage> {
   Widget _buildLookCard(Look look) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
+      ),
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () => context.push('/lookbook/${look.id}'),

@@ -124,6 +124,7 @@ class SalonDetailPage extends StatelessWidget {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.0),
+        side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -178,6 +179,7 @@ class SalonDetailPage extends StatelessWidget {
       child: Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -287,6 +289,7 @@ class SalonDetailPage extends StatelessWidget {
           return Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(12.0)),
+              side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
             ),
             child: Padding(
               padding: EdgeInsets.all(16.0),
@@ -306,6 +309,7 @@ class SalonDetailPage extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8.0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
+                side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
               ),
               child: ListTile(
                 leading: const CircleAvatar(
@@ -351,6 +355,7 @@ class SalonDetailPage extends StatelessWidget {
           return Card(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(12.0)),
+              side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
             ),
             child: Padding(
               padding: EdgeInsets.all(16.0),
@@ -370,6 +375,7 @@ class SalonDetailPage extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 8.0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
+                side: BorderSide(color: AppColors.textGrey.withValues(alpha: 0.15)),
               ),
               child: ListTile(
                 leading: const CircleAvatar(
